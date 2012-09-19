@@ -1,3 +1,4 @@
+#
 detach()
 rm(list=ls())
 fbox <- read.csv("./formicobox_mombasiglio.csv", sep=";")
