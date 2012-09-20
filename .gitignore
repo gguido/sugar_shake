@@ -1,4 +1,5 @@
 .Rproj.user
-.Rhistory
 .RData
-.~lock.formicobox_blocco_conteggi.csv#
+docs
+outputs
+data_oo
