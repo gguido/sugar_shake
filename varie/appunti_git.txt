@@ -1,7 +1,0 @@
-appunti git
-per caricare sul server
-git push origin master
-
-per aggiungere un file
-git add <nomefile>
-
