@@ -1,7 +1,7 @@
 #
 detach()
 rm(list=ls())
-fbox <- read.csv("./formicobox_mombasiglio.csv", sep=";")
+fbox <- read.csv2("./data/formicobox_mombasiglio.csv", sep=";")
 attach(fbox)
 fbox$tratt<-c(rep("fb",48),rep("plac",48))   #trattamenti: formicobox, placebo
 fbox$ss9_bt=ss300_bt_1+ss300_bt_2+ss300_bt_3 #totale zucchero prima trattamento
