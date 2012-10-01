@@ -1,0 +1,80 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1.0in]{geometry}
+\title{Trattamento con acido formico ``Formico box'', valutazione con zucchero a velo}
+\author{Unaapi}
+\date{24/9/2012 }
+%\SweaveOpts{prefix.string=graphics/plot} % Created a "graphics" subdirectory to save graph files in
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+\maketitle
+
+% Hidden R code chunk --- reading in the data
+<<echo = false, results = hide>>=
+source("analisi_formicobox.R")
+@
+
+\section{Descrizione della prova}
+In un apiario di 96 casse sono state
+The \texttt{mtcars} (`Motor Trend Car Road Tests') data set is comprised of \Sexpr{ncol(mtcars)} aspects of automobile design and performance (columns) for \Sexpr{nrow(mtcars)} automobiles (rows).  We wish to know if there is a significant difference in the quarter mile track times (\texttt{qsec}) between the different cylinder classes (\texttt{cyl}; 4, 6, and 8).\\
+
+\noindent Let's first examine the quantiles (minumum, first quantile, median, and third quantile) of the times within each cylinder class.  These value are given in Table \ref{table:quantiles}.
+
+% R code chunk that generates LaTeX code to create table
+<<echo = false, results = tex>>=
+tabledf <- data.frame("N.cylinders" = sort(unique(mtcars$cyl)),
+   "Min" = with(mtcars, tapply(X = qsec, INDEX = list(cyl), FUN = min, na.rm = TRUE)),
+   "Q1" = with(mtcars, tapply(X = qsec, INDEX = list(cyl), FUN = quantile, prob = 0.25, na.rm = TRUE)),
+   "Median" = with(mtcars, tapply(X = qsec, INDEX = list(cyl), FUN = median, na.rm = TRUE)),
+   "Q3" = with(mtcars, tapply(X = qsec, INDEX = list(cyl), FUN = quantile, prob = 0.75, na.rm = TRUE)),
+   "Max" = with(mtcars, tapply(X = qsec, INDEX = list(cyl), FUN = max, na.rm = TRUE)))
+print(xtable(tabledf, caption = "Quantiles of the quarter mile track times within each cylinder class",
+   label = "table:quantiles"), caption.placement = "top", include.rownames = FALSE)
+@
+
+\noindent Based on a non-parametric Kruskal-Wallis test, we see that the times are significantly different from each other:
+<<>>=
+with(mtcars, kruskal.test(qsec ~ cyl))
+@
+
+% Hidden R code chunk that assigns objects that contain calculated values to be used in \Sexpr{}
+%  statements in following paragraph
+% NOTE: The objects are assigned in this code chunk because the R code in the \Sexpr{} statement
+%	would break over multiple lines.
+<<echo = false, results = hide>>=
+n4cyl <- nrow(subset(mtcars, cyl == 4))
+n6cyl <- nrow(subset(mtcars, cyl == 6))
+n8cyl <- nrow(subset(mtcars, cyl == 8))
+
+prop4cyl <- format(round(nrow(subset(mtcars, cyl == 4))/nrow(mtcars)*100, 1), nsmall = 1)
+prop6cyl <- format(round(nrow(subset(mtcars, cyl == 6))/nrow(mtcars)*100, 1), nsmall = 1)
+prop8cyl <- format(round(nrow(subset(mtcars, cyl == 8))/nrow(mtcars)*100, 1), nsmall = 1)
+
+@
+
+\noindent Lastly, Figure \ref{figure:boxstrip} graphically displays the distribution of the times within each cylinder class -- the raw values (shown using a `stripchart') are overlaid with side-by-side boxplots.  The width of each box is also proportional to the number of cars within each cylinder group -- 
+\Sexpr{prop4cyl}\% (\Sexpr{n4cyl}) 4 cyclinder cars; \Sexpr{prop6cyl}\% (\Sexpr{n6cyl}) 6 cyclinder cars; and \Sexpr{prop8cyl}\% (\Sexpr{n8cyl}) 8 cyclinder cars. 
+% First a hidden R code chunk that adds some labels to certain variables --- to be referenced in plot
+<<echo = false, results = hide>>=
+library(Hmisc)
+label(mtcars$qsec) <- "1/4 mile track time (sec)"
+label(mtcars$cyl) <- "No. of cylinders"
+@
+
+% Additional LaTeX code to add caption to figure
+\begin{figure}\label{figure:boxstrip}
+\caption{Distribution of 1/4 mile track time (sec) within each cylinder class.}
+\begin{center}
+\setkeys{Gin}{width=0.75\textwidth} % LaTeX code to read the graphic file in at 75% of its original size
+% R code chunk that produces a graphic
+<<echo = false, fig = true>>=
+with(mtcars, {
+   boxplot(qsec ~ cyl, outpch = NA, varwidth = TRUE,  xlab = label(cyl), ylab = label(qsec),
+      main = paste("Boxplot of", label(qsec), "by\n", label(cyl)))
+   stripchart(qsec ~ cyl, method = "jitter", pch = 1, vertical = TRUE, add = TRUE)
+})
+box("figure") # Adds box around figure
+@
+\end{center}
+\end{figure}
+
+\end{document}
