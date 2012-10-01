@@ -10,10 +10,11 @@
 
 % Hidden R code chunk --- reading in the data
 <<echo = false, results = hide>>=
-source(analisi_formicobox.R)
+source("analisi_formicobox.R")
 @
 
 \section{Descrizione della prova}
+In un apiario di 96 casse sono state
 The \texttt{mtcars} (`Motor Trend Car Road Tests') data set is comprised of \Sexpr{ncol(mtcars)} aspects of automobile design and performance (columns) for \Sexpr{nrow(mtcars)} automobiles (rows).  We wish to know if there is a significant difference in the quarter mile track times (\texttt{qsec}) between the different cylinder classes (\texttt{cyl}; 4, 6, and 8).\\
 
 \noindent Let's first examine the quantiles (minumum, first quantile, median, and third quantile) of the times within each cylinder class.  These value are given in Table \ref{table:quantiles}.
