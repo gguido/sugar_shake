@@ -2,6 +2,7 @@
 \usepackage[margin=1.0in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[italian]{babel}
+\usepackage{hyperref}
 
 % bibliografia (natbib ita modificato)
 \usepackage{natbib}
@@ -23,25 +24,53 @@
 
 % Hidden R code chunk --- reading in the data
 <<echo = false, results = hide>>=
+library(xtable)
 source("analisi_formicobox.R")
 @
 
-\section{Introduzione e obiettivi}
+\section{Obiettivi della prova}
 La valutazione dell'infestazione da varroa tramite il metodo dello zucchero a velo è ancora poco diffusa in Italia.\\
-Lo zucchero a velo è utilizzato da alcuni ricercatori per esempio \citep{bulacio_cagnolo_control_2012} per stimare l'efficia di un trattamento acaricida, anche in presenza di covata.
+Lo zucchero a velo è utilizzato da alcuni ricercatori per esempio \citet{bulacio_cagnolo_control_2012} per stimare l'efficia di un trattamento acaricida, anche in presenza di covata.
 %Trattazione degli errori, confronto con metodo trattamento di controllo.
 Con la presente prova abbiamo inteso valutare gli aspetti pratici e teorici di tale applicazione.\\
-Il lavoro ci ha consentito inoltre di misurare alcuni parametri per una simulazione Montecarlo dell'utilizzo dello zucchero a velo per valutare l'efficacia di un trattamento acaricida in assenza di covata.
+Il lavoro ci ha consentito inoltre di misurare alcuni parametri per una simulazione di tipo Monte Carlo dell'utilizzo dello zucchero a velo per valutare l'efficacia di un trattamento acaricida in assenza di covata, che sarà oggetto di una relazione a parte.
 
 \section{Materiali e metodi}
 \subsection{Apiario}
 Gli alveari utilizzati per la prova provengono da un apiario nomade composto da api di tre diverse origini %elencare e dividere le origini?!?
-con una storia comune iniziata a marzo 2012. Le api sono in parte \textit{Apis mellifera ligustica} ed in parte ibridi buckfast.\\
-L'apiario era composto originariamente di 96 famiglie, a cui sono state sottratte le casse che hanno manifestato durante la prova problemi di orfanità.\\
+con una storia comune iniziata a marzo 2012. Le api sono in parte \textit{Apis mellifera ligustica} ed in parte ibridi Buckfast.\\
+L'apiario era composto originariamente di 96 famiglie, a cui sono state sottratte le casse che hanno incontrato problemi di orfanità nel corso della prova.\\
 Gli alveari sono stati assegnati ai diversi gruppi/trattamenti in base alla disposizione nell'apiario, in modo da minimizzare il rischio che il fenomeno della deriva potesse determinare lo spostamento di parassiti tra i gruppi.
 \subsection{Campionamenti}
+A partire da giugno 2012, fino a settembre il livello di infestazione delle api adulte è stato monitorato mensilmente in tutte le casse rimaste nella prova. E' stato utilizzato il metodo descritto su l'Apis da \citet{vesco_varroa:_2012}, a sua volta basato sugli articoli di \citet{lee_practical_2010,lee_standardized_2010}. Per aumentare la precisione della misurazione dell'infestazione abbiamo effettuato il conteggio su tre campioni di 100 ml di api \citep{lee_practical_2010}.\\
+Il gruppo di alveari n.1, composto inizialmente da 48 alveari, è stato trattato immediatamente dopo il monitoraggio di giugno (t0) con il trattamento formicobox. %%spiegare poi che cosa è il formico box
+La cronologia dei monitoraggi e dei trattamenti è riportata in tabella \ref{table:date}.
+
+% R code chunk that generates LaTeX code to create table
+<<echo = false, results = tex>>=
+tempi<-read.csv2("../data/date.csv")
+names(tempi)<-c("data","codice","operazioni")
+tempi<-tempi[,c(2,1,3)]
+library(xtable)
+print(xtable(tempi,caption = "Cronologia degli interventi",
+   label = "table:date", align="cccp{11cm}"), caption.placement = "bottom", include.rownames = F)
+tempi[,2]<-as.Date(tempi[,2],format="%d/%m/%y")
+
+@
+
 %figura con le date
+Abbiamo distanziato i monitoraggi di almeno \Sexpr{min(dist(tempi[,2]))} giorni al fine di consentire l'esecuzione di un intero ciclo di covata.
+
 \subsection{Trattamenti}
+\subsubsection{Gruppo 1}
+Il gruppo 1 è stato trattato con metodica formicobox il giorno \Sexpr{format(tempi[1,2], "%d/%m/%Y")}  (\Sexpr{tempi[1,1]}), immediatamente dopo il monitoraggio con zucchero a velo.
+\subsubsection{Gruppo 2}
+Il gruppo 2 è stato trattato con metodica formicobox il giorno \Sexpr{format(tempi[2,2], "%d/%m/%Y")} (\Sexpr{tempi[2,1]}), immediatamente dopo il monitoraggio con zucchero a velo, che ha permesso di apprezzare l'aumento dell'infestazione in assenza di trattamenti tra t0 e t1.
+\subsubsection{Gruppo 3}
+Il gruppo 3 è stato trattato con metodica formicobox il giorno \Sexpr{format(tempi[2,2], "%d/%m/%Y")} (\Sexpr{tempi[2,1]}), immediatamente dopo il monitoraggio con zucchero a velo, che ha permesso di apprezzare l'aumento dell'infestazione in assenza di trattamenti tra t0 e t1.\\
+Dopo il trattamento formicobox  a \Sexpr{tempi[2,1]} abbiamo ingabbiato la regina in gabbietta cinese fino al giorno \Sexpr{format(tempi[3,2], "%d/%m/%Y")} (\Sexpr{tempi[3,1]}, \Sexpr{tempi[3,2]-tempi[2,2]} giorni).
+\subsubsection{Gruppo 4}
+Il gruppo 2 è stato trattato con metodica formicobox il giorno \Sexpr{format(tempi[2,2], "%d/%m/%Y")}, immediatamente dopo il monitoraggio con zucchero a velo, che ha permesso di apprezzare l'aumento dell'infestazione in assenza di trattamenti tra t1 e t2.
 \subsection{Analisi dei dati}
 
 \section{Risultati}
@@ -50,5 +79,11 @@ Gli alveari sono stati assegnati ai diversi gruppi/trattamenti in base alla disp
 \subsection{Efficacia e fattibilità del trattamento Fbox}
 
 \section {Discussione}
+
+%\backmatter
+
+\bibliographystyle{natbib_ita} 
+\bibliography{biblio}
+
 
 \end{document}
