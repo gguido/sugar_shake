@@ -1,12 +1,54 @@
-\documentclass{article}
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=1.0in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
 
+% bibliografia (natbib ita modificato)
+\usepackage{natbib}
+\usepackage{textcomp}
+% numeri in formato tedesco
+\usepackage[autolanguage]{numprint}
+
+% unità di misura del sistema internazionale, squaren contro i conflitti con amssymb
+\usepackage[squaren]{SIunits}
+
+
+\title{Trattamento con acido formico ``Formico box'', valutazione con zucchero a velo}
+\author{Unaapi}
+\date{24/9/2012 }
+%\SweaveOpts{prefix.string=graphics/plot} % Created a "graphics" subdirectory to save graph files in
 \begin{document}
 \SweaveOpts{concordance=TRUE}
+\maketitle
 
-<<>>=
-
+% Hidden R code chunk --- reading in the data
+<<echo = false, results = hide>>=
+source("analisi_formicobox.R")
 @
 
+\section{Introduzione e obiettivi}
+La valutazione dell'infestazione da varroa tramite il metodo dello zucchero a velo è ancora poco diffusa in Italia.\\
+Lo zucchero a velo è utilizzato da alcuni ricercatori per esempio \citep{bulacio_cagnolo_control_2012} per stimare l'efficia di un trattamento acaricida, anche in presenza di covata.
+%Trattazione degli errori, confronto con metodo trattamento di controllo.
+Con la presente prova abbiamo inteso valutare gli aspetti pratici e teorici di tale applicazione.\\
+Il lavoro ci ha consentito inoltre di misurare alcuni parametri per una simulazione Montecarlo dell'utilizzo dello zucchero a velo per valutare l'efficacia di un trattamento acaricida in assenza di covata.
 
+\section{Materiali e metodi}
+\subsection{Apiario}
+Gli alveari utilizzati per la prova provengono da un apiario nomade composto da api di tre diverse origini %elencare e dividere le origini?!?
+con una storia comune iniziata a marzo 2012. Le api sono in parte \textit{Apis mellifera ligustica} ed in parte ibridi buckfast.\\
+L'apiario era composto originariamente di 96 famiglie, a cui sono state sottratte le casse che hanno manifestato durante la prova problemi di orfanità.\\
+Gli alveari sono stati assegnati ai diversi gruppi/trattamenti in base alla disposizione nell'apiario, in modo da minimizzare il rischio che il fenomeno della deriva potesse determinare lo spostamento di parassiti tra i gruppi.
+\subsection{Campionamenti}
+%figura con le date
+\subsection{Trattamenti}
+\subsection{Analisi dei dati}
+
+\section{Risultati}
+\subsection{Distribuzione delle varroe nell'apiario e dinamica estiva}
+\subsection{Il metodo dello zucchero a velo per la stima dell'efficacia di un trattamento acaricida}
+\subsection{Efficacia e fattibilità del trattamento Fbox}
+
+\section {Discussione}
 
 \end{document}
