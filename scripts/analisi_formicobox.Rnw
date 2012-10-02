@@ -49,19 +49,26 @@ La cronologia dei monitoraggi e dei trattamenti è riportata in tabella \ref{tab
 % R code chunk that generates LaTeX code to create table
 <<echo = false, results = tex>>=
 tempi<-read.csv2("../data/date.csv")
-names(tempi)<-c("data","codice","operazioni")
+names(tempi)<-c("Data","Codice","Operazioni")
 tempi<-tempi[,c(2,1,3)]
 library(xtable)
-print(xtable(tempi,caption = "Cronologia degli interventi",
-   label = "table:date", align="cccp{11cm}"), caption.placement = "bottom", include.rownames = F)
+print(xtable(tempi[,c(2,1)],caption = "Cronologia dei monitoraggi",
+   label = "table:date", align="ccc"), caption.placement = "bottom", include.rownames = F)
 tempi[,2]<-as.Date(tempi[,2],format="%d/%m/%y")
 
 @
 
 %figura con le date
-Abbiamo distanziato i monitoraggi di almeno \Sexpr{min(dist(tempi[,2]))} giorni al fine di consentire l'esecuzione di un intero ciclo di covata.
+Abbiamo distanziato i monitoraggi di almeno \Sexpr{min(dist(tempi[,2]))} giorni per attendere la realizzazione di almeno un intero ciclo di covata.
 
 \subsection{Trattamenti}
+<<echo = false, results = tex>>=
+tratt<-read.csv2("../data/tratt.csv")
+#library(xtable)
+print(xtable(tratt,caption = "Cronologia dei trattamenti, per le date vedere tab. \ref{table:date}. FBOX= FormicoBox, ING=ingabbiamento della regina, SGAB=liberazione della regina, CTR=trattamento di controllo",
+   label = "table:tratt", align="cccccc"), caption.placement = "bottom", include.rownames = F)
+@
+ANZICHÈ DIVIDERE PER GRUPPO DIVIDERE PER ESPERIMENTO
 \subsubsection{Gruppo 1}
 Il gruppo 1 è stato trattato con metodica formicobox il giorno \Sexpr{format(tempi[1,2], "%d/%m/%Y")}  (\Sexpr{tempi[1,1]}), immediatamente dopo il monitoraggio con zucchero a velo.
 \subsubsection{Gruppo 2}
