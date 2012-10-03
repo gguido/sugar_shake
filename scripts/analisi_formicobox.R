@@ -14,9 +14,10 @@ fbox$t2_ss900<- fbox$t2_ss300_1 + fbox$t2_ss300_2 + fbox$t2_ss300_3 #total sugar
 fbox$t3_ss900<- fbox$t3_ss300_1 + fbox$t3_ss300_2 + fbox$t3_ss300_3 #total sugar shake time 3
 
 # hives selection -------------------------------------------------------
-
+minvar=1.5  #varroe minime per inclusione
+maxvar=15 #varroe massime per inclusione
 !is.na(fbox$t0_ss900-fbox$t1_ss900)->include # NAs removed (only time 0 and 1)
-fbox$t0_ss900<11 & fbox$t0_ss900>1 & include ->include #excluded most infested hives and hives with infestation under 1/900
+fbox$t0_ss900<maxvar & fbox$t0_ss900>minvar & include ->include #excluded most infested hives and hives with infestation under 1/900
 
 fboxi<-fbox[include,] #dataset delle casse in analisi
 rm(include)
@@ -28,11 +29,13 @@ n_fb<-dim(fboxi[fboxi$t0_treat=="fb",])[1]    # num fbox hives
 
 # t1-t0 growth analysis ---------------------------------------------------
 
+# t0 infestation
+boxplot(t0_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
 
-#fboxi$eff_log<-log(ss9_at+0.5)-log(ss9_bt+0.5)
+ #fboxi$eff_log<-log(ss9_at+0.5)-log(ss9_bt+0.5)
 fboxi$t1_growth<-(fboxi$t1_ss900-fboxi$t0_ss900)/fboxi$t0_ss900*100
 
-#boxplot(eff_log~tratt)
+#boxplot(t1_growth~tratt)
 boxplot(fboxi$t1_growth~fboxi$t0_treat)
 
 fboxi_nt<-fboxi[fboxi$t0_treat=="nt",]
@@ -48,11 +51,20 @@ points(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,pch=3)
 abline(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900)
 
 ### henderson_tilton
-ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta*mean(cb))/(tb*mean(ca))))}
+#ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta*mean(cb))/(tb*mean(ca))))}
+ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)*mean(cb/ca)))}
+ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)/mean(ca/cb)))}
+#ht.efficacy<-function(tb,ta,cb,ca){100*(1-((mean(ta/tb)*mean(cb/ca))))}
+
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
-mean(fboxi_fb)
+mean(fboxi_fb$t1_ht.eff)
 
+sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2
 
+boxplot(fboxi_fb$t1_ht.eff)
+plot(fboxi_fb$t0_ss900,fboxi_fb$t1_ht.eff)
+
+fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
 # 
 # 
 # ((mss9fbbt*m_eff_plac)-mss9fbat)/(mss9fbbt*m_eff_plac) ### efficacia del formicobox
