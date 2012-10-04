@@ -1,0 +1,57 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+
+\title{}
+\author{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\begin{abstract}
+\end{abstract}
+
+\section{}
+
+\begin{center}
+\begin{equation}
+ca = k*cb
+\label{equ:control_1}
+\end{equation}
+\end{center}
+La variazione nelle colonie controllo può essere modellizzata secondo l'equazione \ref{equ:control_1}, dove \textit{cb} è il tasso di infestazione delle colonie controllo prima del trattamento, \textit{ca} il tasso di infestazione delle colonie controllo dopo il trattamento, \textit{k} il coefficiente di variazione dell'infestazione dal momento del campionamento precedente il trattamento al momento del campionamento successivo al trattamento.
+\begin{center}
+\begin{equation}
+ta = (1-eff)*k*tb
+\label{equ:treat_1}
+\end{equation}
+\end{center}
+Assumiamo quindi che, se le colonie del gruppo trattato non fossero state trattate, sarebbero andate incontro alla stessa variazione dell'infestazione \textit{k} di quelle di controllo. Essendo state però trattate la loro variazione da prima del trattamento (\textit{tb}) a dopo il trattamento (\textit{ta}) si può assumere equivalente a \begin{math}(1 - {eff})*k\end{math}, dove \textit{eff} è l'efficacia del trattamento.\\
+Poiché, differentemente da \citet{henderson_tests_1955}.
+, non ci troviamo in presenza di un'unica unità di controllo (un campo coltivato) ma di diversi alveari, assumiamo come \textit{k} la media delle variazioni delle infestazioni. Rsisolvendo rispetto a k si ottiene l'equazione \ref{eq:mean_growth}.
+% corretto usare la media aritmetica?
+\begin{center}
+\begin{equation}
+k = \frac{\sum_{i=1}^{n} \frac{ca_i}{cb_i}}{n}
+\label{eq:mean_growth}
+\end{equation}
+\end{center}
+Sostituendo nell'equazione \ref{equ:treat_1} il valore di \textit{k} trovato al punto \ref{eq:mean_growth} e risolvendo rispetto a \textit{eff} si ottiene l'equazione \ref{eq:ht_mod}.
+\begin{center}
+\begin{equation}
+eff = 1-\frac{ta}{tb}*\frac{1}{\frac{\sum_{i=1}^{n} \frac{ca_i}{cb_i}}{n}}
+\label{eq:ht_mod}
+\end{equation}
+\end{center}
+L'equazione \ref{eq:ht_mod} così trovata è classica formula di \citet{henderson_tests_1955} (riportata al punto ) adattata al caso in esame.
+\begin{center}
+\begin{equation}
+eff = 1-\frac{ta}{tb}*\frac{cb}{ca}
+\label{eq:ht_mod}
+\end{equation}
+\end{center}
+
+\end{document}

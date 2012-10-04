@@ -52,17 +52,17 @@ abline(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900)
 
 ### henderson_tilton
 #ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta*mean(cb))/(tb*mean(ca))))}
-ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)*mean(cb/ca)))}
 ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)/mean(ca/cb)))}
 #ht.efficacy<-function(tb,ta,cb,ca){100*(1-((mean(ta/tb)*mean(cb/ca))))}
 
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 mean(fboxi_fb$t1_ht.eff)
 
-sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2
+sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2#media trasformati
+sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2[1] #ic dati trasformati
 
 boxplot(fboxi_fb$t1_ht.eff)
-plot(fboxi_fb$t0_ss900,fboxi_fb$t1_ht.eff)
+
 
 fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
 # 
@@ -113,11 +113,11 @@ fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
 # rm(ora,minu)
 # detach(fboxi)
 # 
-# # Blocco di covata --------------------------------------------------------
+# Blocco di covata --------------------------------------------------------
 # 
 # 
-# formicobox_blocco_conteggi <- read.csv("~/Documenti/importanza_1_sync/unaapi/Sperimentazioni/Formicobox/formicobox_blocco_conteggi.csv", sep=";", dec=",")
-# merge(formicobox_blocco_conteggi,fbox,by.x="alveare",by.y="cassa")->fbox_blocco
+fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
+#merge(formicobox_blocco_conteggi,fbox,by.x="alveare",by.y="cassa")->fbox_blocco
 # as.Date(c("2012/7/15","2012/07/18","2012/7/22","2012/07/26","2012/7/30","2012/08/3","2012/08/7","2012/08/8","2012/08/10","2012/08/13"))->Dates.cad
 # fbox_blocco[fbox_blocco$tratt.x=="ctr",c(3:9,11:13)]->cadute_ctr
 # fbox_blocco[fbox_blocco$tratt.x=="fbox",c(3:9,11:13)]->cadute_fbox
