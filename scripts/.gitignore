@@ -1,5 +1,4 @@
 *.pdf
-*.tex
 *.log
 *.gz
 *.blg
@@ -7,3 +6,10 @@
 *.aux
 *.dvi
 *.out
+.tex~
+.toc
+analisi_formicobox-concordance.tex
+analisi_formicobox.tex
+prova_sweave.tex
+prova_temp.tex~
+prova_temp.toc

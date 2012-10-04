@@ -81,7 +81,46 @@ print(xtable(tratt,caption = "Cronologia dei trattamenti. FBOX= FormicoBox, ING=
     
     
     \subsection{Analisi dei dati}
-    L'analisi dei dati è stata eseguita con R \citet{r_development_core_team_r:_2012}, il report redatto con \LaTeX e l'interfaccia 
+    L'analisi dei dati è stata eseguita con R \citep{r_development_core_team_r:_2012}, il report redatto con \LaTeX e l'interfaccia 
+  \subsubsection{Formula di Henderson e Tilton}
+L'efficacia di un trattamento acaricida può essere valutata basandosi sulla differenza di sviluppo delle popolazioni di acari in unità trattate ed unità di controllo. L'approccio fu sviluppato da \citet{henderson_tests_1955} basandosi sulla formula classica di \citet{abbott_method_1925} per risolvere il problema dell'eterogeneità del gruppo di controllo rispetto al gruppo trattato. L'utilizzo della formula di Abbott è anche consigliato dal gruppo di studio sulla varroa CA3686 promosso dalla UE \citep{ca3686_wg_technical_1999}.
+\begin{center}
+\begin{equation}
+ca = k*cb
+\label{equ:control_1}
+\end{equation}
+\end{center}
+La variazione nelle colonie controllo può essere modellizzata secondo l'equazione \ref{equ:control_1}, dove \textit{cb} è il tasso di infestazione delle colonie controllo prima del trattamento, \textit{ca} il tasso di infestazione delle colonie controllo dopo il trattamento, \textit{k} il coefficiente di variazione dell'infestazione dal momento del campionamento precedente il trattamento al momento del campionamento successivo al trattamento.
+\begin{center}
+\begin{equation}
+ta = (1-eff)*k*tb
+\label{equ:treat_1}
+\end{equation}
+\end{center}
+Assumiamo quindi che, se le colonie del gruppo trattato non fossero state trattate, sarebbero andate incontro alla stessa variazione dell'infestazione \textit{k} di quelle di controllo. Essendo state però trattate la loro variazione da prima del trattamento (\textit{tb}) a dopo il trattamento (\textit{ta}) si può assumere equivalente a \begin{math}(1 - {eff})*k\end{math}, dove \textit{eff} è l'efficacia del trattamento.\\
+Poiché, differentemente da \citet{henderson_tests_1955}.
+, non ci troviamo in presenza di un'unica unità di controllo (un campo coltivato) ma di diversi alveari, assumiamo come \textit{k} la media delle variazioni delle infestazioni. Rsisolvendo rispetto a k si ottiene l'equazione \ref{eq:mean_growth}.
+% corretto usare la media aritmetica?
+\begin{center}
+\begin{equation}
+k = \frac{\sum_{i=1}^{n} \frac{ca_i}{cb_i}}{n}
+\label{eq:mean_growth}
+\end{equation}
+\end{center}
+Sostituendo nell'equazione \ref{equ:treat_1} il valore di \textit{k} trovato al punto \ref{eq:mean_growth} e risolvendo rispetto a \textit{eff} si ottiene l'equazione \ref{eq:ht_mod}.
+\begin{center}
+\begin{equation}
+eff = 1-\frac{ta}{tb}*\frac{1}{\frac{\sum_{i=1}^{n} \frac{ca_i}{cb_i}}{n}}
+\label{eq:ht_mod}
+\end{equation}
+\end{center}
+L'equazione \ref{eq:ht_mod} così trovata è classica formula di \citet{henderson_tests_1955} (riportata al punto \ref{eq:ht_classic}) adattata al caso in esame.
+\begin{center}
+\begin{equation}
+eff = 1-\frac{ta}{tb}*\frac{cb}{ca}
+\label{eq:ht_classic}
+\end{equation}
+\end{center}
 
 \section{Risultati}
   \subsection{Distribuzione delle varroe nell'apiario e dinamica estiva}
@@ -96,21 +135,22 @@ print(xtable(tratt,caption = "Cronologia dei trattamenti. FBOX= FormicoBox, ING=
 <<echo = FALSE, fig=TRUE>>=
 boxplot(t0_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
 @
-\caption{Boxplot della distribuzione dell'infestazione nei gruppi trattati e non trattati a t0.}
+\caption{Boxplot dell'infestazione nei gruppi trattati e non trattati a t0. }
 \label{figure:inf_t0_fbox}
 \end{center}
 \end{figure}
-Dopo il trattamento, a t1, il tasso di infestazione medio è stato di \Sexpr{format(mean(fboxi$t1_ss900[fboxi$t0_treat=="fb"])/9,digits=2)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_ss900[fboxi$t0_treat=="nt"])/9,digits=2)}\% per le non trattate (fig. \ref{figure:inf_t1_fbox}).
+Dopo il trattamento, a t1, il tasso di infestazione medio è stato di \Sexpr{format(mean(fboxi$t1_ss900[fboxi$t0_treat=="fb"])/9,digits=2,nsmall=2)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_ss900[fboxi$t0_treat=="nt"])/9,digits=2,nsmall=2)}\% per le non trattate (fig. \ref{figure:inf_t1_fbox}).
 \begin{figure}[p]
 \begin{center}
 <<echo = FALSE, fig=TRUE>>=
 boxplot(t1_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
+abline(h=5,col="red",lty=2)
 @
-\caption{Boxplot della distribuzione dell'infestazione nei gruppi trattati e non trattati a t1.}
+\caption{Boxplot dell'infestazione nei gruppi trattati e non trattati a t1. Tratteggiata in rosso la soglia di pericolo del 5\% \citep{martin_population_1998,currie_economic_2008,genersch_german_2010}}
 \label{figure:inf_t1_fbox}
 \end{center}
 \end{figure}
-La variazione media dell'infestazione è risultata di \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="fb"]),digits=2)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="nt"]),digits=2)}\% per i non trattati (fig. \ref{figure:grow_t1_fbox}).\\
+La variazione media dell'infestazione è risultata di \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="fb"]),digits=2,nsmall=1)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="nt"]),digits=2,nsmall=1)}\% per i non trattati (fig. \ref{figure:grow_t1_fbox}).\\
 \begin{figure}[p]
 \begin{center}
 <<echo = FALSE, fig=TRUE>>=
@@ -120,13 +160,25 @@ boxplot(fboxi$t1_growth~fboxi$t0_treat,names=c("trattati","non trattati"),ylab="
 \label{figure:grow_t1_fbox}
 \end{center}
 \end{figure}
-L'efficacia media del trattamento, calcolata con la formula di \citet{henderson_tests_1955} è risultata del \Sexpr{format(mean(fboxi_fb$t1_ht.eff),digits=2)}\%, ma la variabilità è stata importante .
+L'efficacia media del trattamento, calcolata con la formula di \citet{henderson_tests_1955} è risultata del \Sexpr{format(mean(fboxi_fb$t1_ht.eff),digits=2,nsmall=1)}\%, la media dei dati sottoposti a trasformazione arcoseno \citep{zar_biostatistical_2010} risulta \Sexpr{format(100*sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2,digits=2,nsmall=1)}\% (i.c. 95\%: \Sexpr{format((sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2)[1]*100,digits=2,nsmall=1)}-\Sexpr{format((sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2)[2]*100,digits=2,nsmall=1)}\%). La distribuzione è rappresentata in figura \ref{figure:hteff_t1_fbox}, é da notare che l'efficacia minima è risultata del \Sexpr{format(min(fboxi_fb$t1_ht.eff),digits=2,nsmall=1)}\% ed il primo quartile \Sexpr{format(quantile(fboxi_fb$t1_ht.eff,probs=.25),digits=2,nsmall=1)}\%.
 
+\begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+boxplot(fboxi_fb$t1_ht.eff,ylab="efficacia (%)")
+@
+\caption{Boxplot della variazione dell'infestazione nei gruppi trattati e non trattati tra t0 e t1.}
+\label{figure:hteff_t1_fbox}
+\end{center}
+\end{figure}
+     
 \subsection{Efficacia e fattibilità del trattamento Fbox}
 
 \section {Discussione}
 La variabilità dell'efficacia del trattamento in presenza di covata potenzialmente influenzato dalla reinfestazione, oltre che dall'errore sistematico che deriva dal campionamento e dalla possibile variazione del rapporto tra varroe foretiche e varroe in riproduzione. %commenti su drifting (cercare reinfestation in biblio zotero).
 Anche la variazione della popolazione di api adulte, che non è uguale nelle casse, è una causa di variabilità importante e dovrebbe essere valutata nel disegno sperimentale.
+
+%henderson: per tener conto dei casi che comunque sarebbero schizzati al massimo, ma magari meno, bisognerebbe applicare henderson con medie differenziate sui 4 quartili (di crescita). Per tenere in qualche modo conto della diversa potenzialità di aumento della varroa nelle diverse casse.
 %\backmatter
 
 \bibliographystyle{natbib_ita} 
