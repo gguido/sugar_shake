@@ -81,6 +81,7 @@ print(xtable(tratt,caption = "Cronologia dei trattamenti. FBOX= FormicoBox, ING=
     
     
     \subsection{Analisi dei dati}
+<<<<<<< HEAD
     L'analisi dei dati è stata eseguita con R \citep{r_development_core_team_r:_2012}, il report redatto con \LaTeX e l'interfaccia 
   \subsubsection{Formula di Henderson e Tilton}
 L'efficacia di un trattamento acaricida può essere valutata basandosi sulla differenza di sviluppo delle popolazioni di acari in unità trattate ed unità di controllo. L'approccio fu sviluppato da \citet{henderson_tests_1955} basandosi sulla formula classica di \citet{abbott_method_1925} per risolvere il problema dell'eterogeneità del gruppo di controllo rispetto al gruppo trattato. L'utilizzo della formula di Abbott è anche consigliato dal gruppo di studio sulla varroa CA3686 promosso dalla UE \citep{ca3686_wg_technical_1999}.
@@ -121,6 +122,9 @@ eff = 1-\frac{ta}{tb}*\frac{cb}{ca}
 \label{eq:ht_classic}
 \end{equation}
 \end{center}
+=======
+    L'analisi dei dati è stata eseguita con R \citet{r_development_core_team_r:_2012}, il report redatto con \LaTeX e l'interfaccia 
+>>>>>>> 5e11d6990a558da141a899493187423acb8fec5d
 
 \section{Risultati}
   \subsection{Distribuzione delle varroe nell'apiario e dinamica estiva}
@@ -135,15 +139,24 @@ eff = 1-\frac{ta}{tb}*\frac{cb}{ca}
 <<echo = FALSE, fig=TRUE>>=
 boxplot(t0_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
 @
+<<<<<<< HEAD
 \caption{Boxplot dell'infestazione nei gruppi trattati e non trattati a t0. }
 \label{figure:inf_t0_fbox}
 \end{center}
 \end{figure}
 Dopo il trattamento, a t1, il tasso di infestazione medio è stato di \Sexpr{format(mean(fboxi$t1_ss900[fboxi$t0_treat=="fb"])/9,digits=2,nsmall=2)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_ss900[fboxi$t0_treat=="nt"])/9,digits=2,nsmall=2)}\% per le non trattate (fig. \ref{figure:inf_t1_fbox}).
+=======
+\caption{Boxplot della distribuzione dell'infestazione nei gruppi trattati e non trattati a t0.}
+\label{figure:inf_t0_fbox}
+\end{center}
+\end{figure}
+Dopo il trattamento, a t1, il tasso di infestazione medio è stato di \Sexpr{format(mean(fboxi$t1_ss900[fboxi$t0_treat=="fb"])/9,digits=2)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_ss900[fboxi$t0_treat=="nt"])/9,digits=2)}\% per le non trattate (fig. \ref{figure:inf_t1_fbox}).
+>>>>>>> 5e11d6990a558da141a899493187423acb8fec5d
 \begin{figure}[p]
 \begin{center}
 <<echo = FALSE, fig=TRUE>>=
 boxplot(t1_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
+<<<<<<< HEAD
 abline(h=5,col="red",lty=2)
 @
 \caption{Boxplot dell'infestazione nei gruppi trattati e non trattati a t1. Tratteggiata in rosso la soglia di pericolo del 5\% \citep{martin_population_1998,currie_economic_2008,genersch_german_2010}}
@@ -151,6 +164,14 @@ abline(h=5,col="red",lty=2)
 \end{center}
 \end{figure}
 La variazione media dell'infestazione è risultata di \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="fb"]),digits=2,nsmall=1)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="nt"]),digits=2,nsmall=1)}\% per i non trattati (fig. \ref{figure:grow_t1_fbox}).\\
+=======
+@
+\caption{Boxplot della distribuzione dell'infestazione nei gruppi trattati e non trattati a t1.}
+\label{figure:inf_t1_fbox}
+\end{center}
+\end{figure}
+La variazione media dell'infestazione è risultata di \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="fb"]),digits=2)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="nt"]),digits=2)}\% per i non trattati (fig. \ref{figure:grow_t1_fbox}).\\
+>>>>>>> 5e11d6990a558da141a899493187423acb8fec5d
 \begin{figure}[p]
 \begin{center}
 <<echo = FALSE, fig=TRUE>>=
@@ -160,6 +181,7 @@ boxplot(fboxi$t1_growth~fboxi$t0_treat,names=c("trattati","non trattati"),ylab="
 \label{figure:grow_t1_fbox}
 \end{center}
 \end{figure}
+<<<<<<< HEAD
 L'efficacia media del trattamento, calcolata con la formula di \citet{henderson_tests_1955} è risultata del \Sexpr{format(mean(fboxi_fb$t1_ht.eff),digits=2,nsmall=1)}\%, la media dei dati sottoposti a trasformazione arcoseno \citep{zar_biostatistical_2010} risulta \Sexpr{format(100*sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2,digits=2,nsmall=1)}\% (i.c. 95\%: \Sexpr{format((sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2)[1]*100,digits=2,nsmall=1)}-\Sexpr{format((sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2)[2]*100,digits=2,nsmall=1)}\%). La distribuzione è rappresentata in figura \ref{figure:hteff_t1_fbox}, é da notare che l'efficacia minima è risultata del \Sexpr{format(min(fboxi_fb$t1_ht.eff),digits=2,nsmall=1)}\% ed il primo quartile \Sexpr{format(quantile(fboxi_fb$t1_ht.eff,probs=.25),digits=2,nsmall=1)}\%.
 
 \begin{figure}[p]
@@ -172,13 +194,20 @@ boxplot(fboxi_fb$t1_ht.eff,ylab="efficacia (%)")
 \end{center}
 \end{figure}
      
+=======
+L'efficacia media del trattamento, calcolata con la formula di \citet{henderson_tests_1955} è risultata del \Sexpr{format(mean(fboxi_fb$t1_ht.eff),digits=2)}\%, ma la variabilità è stata importante .
+
+>>>>>>> 5e11d6990a558da141a899493187423acb8fec5d
 \subsection{Efficacia e fattibilità del trattamento Fbox}
 
 \section {Discussione}
 La variabilità dell'efficacia del trattamento in presenza di covata potenzialmente influenzato dalla reinfestazione, oltre che dall'errore sistematico che deriva dal campionamento e dalla possibile variazione del rapporto tra varroe foretiche e varroe in riproduzione. %commenti su drifting (cercare reinfestation in biblio zotero).
 Anche la variazione della popolazione di api adulte, che non è uguale nelle casse, è una causa di variabilità importante e dovrebbe essere valutata nel disegno sperimentale.
+<<<<<<< HEAD
 
 %henderson: per tener conto dei casi che comunque sarebbero schizzati al massimo, ma magari meno, bisognerebbe applicare henderson con medie differenziate sui 4 quartili (di crescita). Per tenere in qualche modo conto della diversa potenzialità di aumento della varroa nelle diverse casse.
+=======
+>>>>>>> 5e11d6990a558da141a899493187423acb8fec5d
 %\backmatter
 
 \bibliographystyle{natbib_ita} 

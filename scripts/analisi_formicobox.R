@@ -52,17 +52,27 @@ abline(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900)
 
 ### henderson_tilton
 #ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta*mean(cb))/(tb*mean(ca))))}
+<<<<<<< HEAD
+=======
+ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)*mean(cb/ca)))}
+>>>>>>> 5e11d6990a558da141a899493187423acb8fec5d
 ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)/mean(ca/cb)))}
 #ht.efficacy<-function(tb,ta,cb,ca){100*(1-((mean(ta/tb)*mean(cb/ca))))}
 
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 mean(fboxi_fb$t1_ht.eff)
 
+<<<<<<< HEAD
 sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2#media trasformati
 sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2[1] #ic dati trasformati
 
 boxplot(fboxi_fb$t1_ht.eff)
+=======
+sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2
+>>>>>>> 5e11d6990a558da141a899493187423acb8fec5d
 
+boxplot(fboxi_fb$t1_ht.eff)
+plot(fboxi_fb$t0_ss900,fboxi_fb$t1_ht.eff)
 
 fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
 # 
