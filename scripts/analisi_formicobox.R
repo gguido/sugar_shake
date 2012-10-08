@@ -117,12 +117,84 @@ fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
 # 
 # 
 fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
-#merge(formicobox_blocco_conteggi,fbox,by.x="alveare",by.y="cassa")->fbox_blocco
-# as.Date(c("2012/7/15","2012/07/18","2012/7/22","2012/07/26","2012/7/30","2012/08/3","2012/08/7","2012/08/8","2012/08/10","2012/08/13"))->Dates.cad
-# fbox_blocco[fbox_blocco$tratt.x=="ctr",c(3:9,11:13)]->cadute_ctr
-# fbox_blocco[fbox_blocco$tratt.x=="fbox",c(3:9,11:13)]->cadute_fbox
-# plot(Dates.cad,apply(cadute_fbox,2,mean),type="l")
-# plot(Dates.cad,apply(cadute_ctr,2,mean),type="l")
+merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
+as.Date(c("2012/7/15","2012/07/18","2012/7/22","2012/07/26","2012/7/30","2012/08/3","2012/08/7","2012/08/8","2012/08/10","2012/08/13"))->Dates.cad
+fbox_blocco_m[fbox_blocco_m$tratt=="ctr",c(3:12)]->cadute_ctr
+fbox_blocco_m[fbox_blocco_m$tratt=="fbox",c(3:12)]->cadute_fbox
+dim(cadute_ctr)[1]->num_ctr
+dim(cadute_fbox)[1]->num_fbox
+plot(Dates.cad,apply(cadute_fbox,2,mean),type="l")
+plot(Dates.cad,apply(cadute_ctr,2,mean),type="l")
+#plot(apply(fbox_blocco_m[,c(3:12)],1,sum),fbox_blocco_m$)
+boxplot(cadute_ctr,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti")
+lines(x=c(7.5,7.5),y=c(0,max(cadute_ctr)),lwd=3,col="red")
+text(7.5,max(cadute_ctr),"trattamento di controllo",adj="left",col="red")
+boxplot(cadute_fbox,names=(Dates.cad-as.Date("2012/07/12")))
+lines(x=c(7.5,7.5),y=c(0,max(cadute_fbox)),lwd=3,col="red")
+text(7.5,max(cadute_fbox),"trattamento di controllo",col="red")
+boxplot(cadute_fbox[1:7],add=F,col="red",names=(Dates.cad-as.Date("2012/07/12"))[1:7]) #confronto efficacia sotto opercolo
+
+#tb ta cb ca
+#ht.efficacy()
+apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),3:9],1,sum)->tb
+apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),10:12],1,sum)->ta
+apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),3:9],1,sum)->cb
+apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),10:12],1,sum)->ca
+ht.efficacy(tb,ta,cb,ca)
+ht.efficacy(tb,ta,cb,ca)->ht.cad
+mean(ht.efficacy(tb,ta,cb,ca))
+boxplot(ht.efficacy(tb,ta,cb,ca))
+
+fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")]->tb
+fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")]->ta
+fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")]->cb
+fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")]->ca
+ht.efficacy(tb,ta,cb,ca)
+ht.efficacy(tb,ta,cb,ca)->ht.sug
+mean(ht.efficacy(tb,ta,cb,ca))
+boxplot(ht.efficacy(tb,ta,cb,ca))
+
+plot(fbox_blocco_m$t2_ss900, apply(fbox_blocco_m[,10:12],1,sum))
+cor(fbox_blocco_m$t2_ss900, apply(fbox_blocco_m[,10:12],1,sum))
+     
+     apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum)
+     
+summary(lm(fbox_blocco_m$t2_ss900 ~ apply(fbox_blocco_m[,10:12],1,sum)))
+     apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum)
+     #prec=calcolo metodo classico
+(apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum))[which(fbox_blocco_m$tratt=="fbox")]->eff.cad
+     plot(eff.cad,ht.sug)
+cbind(eff.cad*100,ht.sug)
+abs(eff.cad*100-ht.sug)     
+plot(apply(fbox_blocco_m[,3:12],1,sum)[which(fbox_blocco_m$tratt=="fbox")],abs(eff.cad*100-ht.sug))
+     abline()
+#calcolo numero api
+#mean()
+cor(tb,fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")])
+cor(ta,fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")])
+cor(cb,fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")])
+cor(ca,fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")])
+
+plot(tb,fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")])
+plot(ta,fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")])
+plot(cb,fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")])
+plot(ca,fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")])
+
+mean(ca/(fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")]/939))
+#non torna il numero di api!!!!
+
+2400/.14
+57/0.02
+
+plot(ht.cad,ht.sug)# casino!!!
+#probabilmente non è corretto 
+#dato che media = varianza e non media=sd significa che all'aumentare della media in proporzione aumenta di più la precisione
+#fare correzione di abbott a dati cadute (?)
+
+curve(sqrt(x)/x,0,10)
+
+
+
 # mean(fbox_blocco$Z2[fbox_blocco$tratt.x=="ctr"])
 # mean(fbox_blocco$Z2[fbox_blocco$tratt.x=="fbox"])
 # boxplot(fbox_blocco$Z2~fbox_blocco$tratt.x)

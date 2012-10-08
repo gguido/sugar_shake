@@ -172,6 +172,12 @@ boxplot(fboxi_fb$t1_ht.eff,ylab="efficacia (%)")
 \end{center}
 \end{figure}
      
+     \subsubsection{Zucchero a velo e conteggio dei fondi}
+Al netto delle casse con problemi di regina sono rimasti nella prova \Sexpr{num_fbox} alveari trattati e \Sexpr{num_ctr} non trattati che fungevano da controllo.\\
+
+
+     
+     
 \subsection{Efficacia e fattibilità del trattamento Fbox}
 
 \section {Discussione}
