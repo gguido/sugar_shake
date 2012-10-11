@@ -115,36 +115,40 @@ fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
 # 
 # Blocco di covata --------------------------------------------------------
 # 
-# 
+# carico dati
 fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
 merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
+#fbox_blocco_m[which( apply(fbox_blocco_m[,3:12],1,sum)>200),]->fbox_blocco_m
 as.Date(c("2012/7/15","2012/07/18","2012/7/22","2012/07/26","2012/7/30","2012/08/3","2012/08/7","2012/08/8","2012/08/10","2012/08/13"))->Dates.cad
 fbox_blocco_m[fbox_blocco_m$tratt=="ctr",c(3:12)]->cadute_ctr
 fbox_blocco_m[fbox_blocco_m$tratt=="fbox",c(3:12)]->cadute_fbox
-dim(cadute_ctr)[1]->num_ctr
+dim(cadute_ctr)[1]->num_ctr #numero di alveari nell'esperimento
 dim(cadute_fbox)[1]->num_fbox
-plot(Dates.cad,apply(cadute_fbox,2,mean),type="l")
+plot(Dates.cad,apply(cadute_fbox,2,mean),type="l") #andamento medio caduta
 plot(Dates.cad,apply(cadute_ctr,2,mean),type="l")
 #plot(apply(fbox_blocco_m[,c(3:12)],1,sum),fbox_blocco_m$)
+
+#boxplot cadute, usare caduta giornaliera e non dati assoluti (3 e 4 giorni)
 boxplot(cadute_ctr,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti")
 lines(x=c(7.5,7.5),y=c(0,max(cadute_ctr)),lwd=3,col="red")
-text(7.5,max(cadute_ctr),"trattamento di controllo",adj="left",col="red")
+text(7.5,max(cadute_ctr),"trattamento di controllo",adj=1,col="red")
 boxplot(cadute_fbox,names=(Dates.cad-as.Date("2012/07/12")))
 lines(x=c(7.5,7.5),y=c(0,max(cadute_fbox)),lwd=3,col="red")
-text(7.5,max(cadute_fbox),"trattamento di controllo",col="red")
+text(7.5,max(cadute_fbox),"trattamento di controllo",adj=1,col="red")
 boxplot(cadute_fbox[1:7],add=F,col="red",names=(Dates.cad-as.Date("2012/07/12"))[1:7]) #confronto efficacia sotto opercolo
 
-#tb ta cb ca
-#ht.efficacy()
-apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),3:9],1,sum)->tb
-apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),10:12],1,sum)->ta
-apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),3:9],1,sum)->cb
-apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),10:12],1,sum)->ca
-ht.efficacy(tb,ta,cb,ca)
-ht.efficacy(tb,ta,cb,ca)->ht.cad
-mean(ht.efficacy(tb,ta,cb,ca))
-boxplot(ht.efficacy(tb,ta,cb,ca))
+# #tb ta cb ca
+# #ht.efficacy()
+# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),3:9],1,sum)->tb
+# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),10:12],1,sum)->ta
+# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),3:9],1,sum)->cb
+# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),10:12],1,sum)->ca
+# ht.efficacy(tb,ta,cb,ca)
+# ht.efficacy(tb,ta,cb,ca)->ht.cad
+# mean(ht.efficacy(tb,ta,cb,ca))
+# boxplot(ht.efficacy(tb,ta,cb,ca))
 
+# henderson tilton su zucchero
 fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")]->tb
 fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")]->ta
 fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")]->cb
@@ -154,44 +158,75 @@ ht.efficacy(tb,ta,cb,ca)->ht.sug
 mean(ht.efficacy(tb,ta,cb,ca))
 boxplot(ht.efficacy(tb,ta,cb,ca))
 
-plot(fbox_blocco_m$t2_ss900, apply(fbox_blocco_m[,10:12],1,sum))
-cor(fbox_blocco_m$t2_ss900, apply(fbox_blocco_m[,10:12],1,sum))
-     
-     apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum)
-     
-summary(lm(fbox_blocco_m$t2_ss900 ~ apply(fbox_blocco_m[,10:12],1,sum)))
-     apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum)
-     #prec=calcolo metodo classico
-(apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum))[which(fbox_blocco_m$tratt=="fbox")]->eff.cad
-     plot(eff.cad,ht.sug)
-cbind(eff.cad*100,ht.sug)
-abs(eff.cad*100-ht.sug)     
-plot(apply(fbox_blocco_m[,3:12],1,sum)[which(fbox_blocco_m$tratt=="fbox")],abs(eff.cad*100-ht.sug))
-     abline()
-#calcolo numero api
-#mean()
-cor(tb,fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")])
-cor(ta,fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")])
-cor(cb,fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")])
-cor(ca,fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")])
+#correlazione zucchero a t2-cadute in blocco nel controllo
+plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
+#pearson
+cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum))
+#regressione per origine
+lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum))->linear_model
+abline(linear_model)
+summary(linear_model)
+#numero medio di api post blocco api/campione varroe/api/campione 
+100/linear_model$coefficients
 
-plot(tb,fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")])
-plot(ta,fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")])
-plot(cb,fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")])
-plot(ca,fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")])
+#idem senza 76 e 77
+fbox_blocco_m->fbox_blocco_m_old
+fbox_blocco_m[-c(6,7),]->fbox_blocco_m
+#correlazione zucchero a t2-cadute in blocco nel controllo
+plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
+#pearson
+cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum))
+#regressione per origine
+lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum))->linear_model
+abline(linear_model)
+summary(linear_model)
+#numero medio di api post blocco api/campione varroe/api/campione 
+100/linear_model$coefficients
+#ripristino dati
+fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
+merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
+rm(fbox_blocco_m_old)
 
-mean(ca/(fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")]/939))
-#non torna il numero di api!!!!
+#fare stessa correlazione tra totale cadute e zucchero a t1
+#distinguendo tra trattati e non trattati
+#perché in trattati si è intoerrotta la riproduzione
 
-2400/.14
-57/0.02
+#calcolo efficacia metodo classico delle cadute.
+eff.class<-100*apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum)
+eff.class[which(fbox_blocco_m$tratt=="fbox")]->eff.cad
+rm(eff.class)
+#confronto con zucchero
+rb<-boxplot(eff.cad,ht.sug,names=c("cadute","zucchero")) 
+c(mean(eff.cad),mean(ht.sug))->mean.values
+points(seq(rb$n), mean.values, pch = 17) #aggiunte medie a boxplot
+mean(eff.cad)
+mean(ht.sug)
+plot(eff.cad,ht.sug)
+cbind(eff.cad,ht.sug)
+abs(eff.cad-ht.sug)->diff.eff #differenze di efficacia tra due metodi
+apply(fbox_blocco_m[,3:12],1,sum)[which(fbox_blocco_m$tratt=="fbox")]->tot_cad_fbox
+plot(tot_cad_fbox,diff.eff,xlab="totale cadute",ylab="differenza di efficacia con i due metodi")
 
-plot(ht.cad,ht.sug)# casino!!!
-#probabilmente non è corretto 
 #dato che media = varianza e non media=sd significa che all'aumentare della media in proporzione aumenta di più la precisione
 #fare correzione di abbott a dati cadute (?)
 
 curve(sqrt(x)/x,0,10)
+
+# henderson tilton su zucchero t1
+#selezione tutte le casse trattate: id_hive>46; NOT blocco
+#eliminazioni orfane
+#eliminazione infestazione inadeguata
+setdiff(fbox$id_hive[which(fbox$t0_treat=="nt")],fbox_blocco_m$id_hive)->fbox_t2_id
+!is.na(fbox$t1_ss900+fbox$t2_ss900)
+
+fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")]->tb
+fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")]->ta
+fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")]->cb
+fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")]->ca
+ht.efficacy(tb,ta,cb,ca)
+ht.efficacy(tb,ta,cb,ca)->ht.sug
+mean(ht.efficacy(tb,ta,cb,ca))
+boxplot(ht.efficacy(tb,ta,cb,ca))
 
 
 
@@ -206,3 +241,9 @@ curve(sqrt(x)/x,0,10)
 # #fare abbott modificato con cadute e con z3
 # (fbox_blocco$Z3[fbox_blocco$tratt.x=="fbox"])/(fbox_blocco$Z2[fbox_blocco$tratt.x=="fbox"])
 # 
+
+
+#da fare in treno:
+#commenti alle analisi presenti
+#henderson tilton sulle casse non bloccate ma formicate a t1
+#fare taylor 1987 (cit. in floris 2001)
