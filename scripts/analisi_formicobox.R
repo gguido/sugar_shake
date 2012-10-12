@@ -55,8 +55,35 @@ abline(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900)
 ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)/mean(ca/cb)))}
 #ht.efficacy<-function(tb,ta,cb,ca){100*(1-((mean(ta/tb)*mean(cb/ca))))}
 
+ht.efficacy.quantiles<-function(tb,ta,cb,ca,probs){
+  if(max(probs)>=1 | min(probs<=0))
+    {paste("Error, probs must be strictly comprised between 0 and 1")}
+  else{
+    probs<-c(0,probs,1)
+    ht.effq<-NULL
+    for(i in 1:(length(probs)-1)){
+      rank(tb,ties.method="first")/length(tb)->rtb
+      rank(cb,ties.method="first")/length(cb)->rcb
+      tb[rtb>probs[i] & rtb<=probs[i+1]]->tbq
+      cb[rcb>probs[i] & rcb<=probs[i+1]]->cbq
+      ta[rtb>probs[i] & rtb<=probs[i+1]]->taq
+      ca[rcb>probs[i] & rcb<=probs[i+1]]->caq
+      100*(1-((taq/tbq)/mean(caq/cbq)))->ht.effqi
+      ht.effqi->ht.effq[[i]]
+    }
+    ht.effq
+  }
+}
+
+  
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 mean(fboxi_fb$t1_ht.eff)
+
+#prova con i quantili
+boxplot(ht.efficacy.quantiles(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900,probs=c(0.25,0.5,0.75)))
+lapply(ht.efficacy.quantiles(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900,probs=c(0.25,0.5,0.75)),mean)
+
+  
 
 sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2#media trasformati
 sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2[1] #ic dati trasformati
@@ -212,35 +239,41 @@ plot(tot_cad_fbox,diff.eff,xlab="totale cadute",ylab="differenza di efficacia co
 
 curve(sqrt(x)/x,0,10)
 
-# henderson tilton su zucchero t1
-#selezione tutte le casse trattate: id_hive>46; NOT blocco
-#eliminazioni orfane
-#eliminazione infestazione inadeguata
-setdiff(fbox$id_hive[which(fbox$t0_treat=="nt")],fbox_blocco_m$id_hive)->fbox_t2_id
-!is.na(fbox$t1_ss900+fbox$t2_ss900)
 
-fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")]->tb
-fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")]->ta
-fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")]->cb
-fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")]->ca
+# henderson tilton su zucchero t1 -----------------------------------------
+
+##selezione casse trattate
+  #selezione tutte le casse trattate: id_hive>48; NOT blocco
+  merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
+  which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->treat_indices
+  #eliminazioni orfane/dati mancanti
+  intersect(which(!is.na(fbox$t1_ss900+fbox$t2_ss900)),treat_indices)->treat_indices #questi sono indici
+  #eliminazione infestazione inadeguata
+  intersect(which(fbox$t1_ss900<maxvar & fbox$t1_ss900>minvar),treat_indices) ->treat_indices
+  #intersect(which(fbox$t1_ss900>minvar),treat_indices) ->treat_indices #senza massimo
+##selezione casse controllo
+  #selezione tutte le casse trattate: id_hive<48; NOT blocco
+  which((fbox_temp$t0_treat=="fb") & is.na(fbox_temp$tratt))->ctr_indices
+  #eliminazioni orfane/dati mancanti
+  intersect(which(!is.na(fbox$t1_ss900+fbox$t2_ss900)),ctr_indices)->ctr_indices #questi sono indici
+  #eliminazione infestazione inadeguata
+  intersect(which(fbox$t1_ss900<maxvar & fbox$t1_ss900>minvar),ctr_indices)->ctr_indices
+  #intersect(which(fbox$t1_ss900>minvar),ctr_indices)->ctr_indices #senza massimo
+
+fbox$t1_ss900[treat_indices]->tb
+fbox$t2_ss900[treat_indices]->ta
+fbox$t1_ss900[ctr_indices]->cb
+fbox$t2_ss900[ctr_indices]->ca
 ht.efficacy(tb,ta,cb,ca)
-ht.efficacy(tb,ta,cb,ca)->ht.sug
+#ht.efficacy(tb,ta,cb,ca)->ht.sug
 mean(ht.efficacy(tb,ta,cb,ca))
 boxplot(ht.efficacy(tb,ta,cb,ca))
 
 
 
-# mean(fbox_blocco$Z2[fbox_blocco$tratt.x=="ctr"])
-# mean(fbox_blocco$Z2[fbox_blocco$tratt.x=="fbox"])
-# boxplot(fbox_blocco$Z2~fbox_blocco$tratt.x)
-# (fbox_blocco$Z3[fbox_blocco$tratt.x=="fbox"])/(fbox_blocco$Z2[fbox_blocco$tratt.x=="fbox"])
-# sum(cadute_fbox)
-# sum(cadute_ctr)
-# sum(apply(cadute_fbox,2,mean))
-# sum(apply(cadute_ctr,2,mean))
-# #fare abbott modificato con cadute e con z3
-# (fbox_blocco$Z3[fbox_blocco$tratt.x=="fbox"])/(fbox_blocco$Z2[fbox_blocco$tratt.x=="fbox"])
-# 
+
+##altro da fare
+#preparare file a parte per taylor e formule varie su efficacia
 
 
 #da fare in treno:
