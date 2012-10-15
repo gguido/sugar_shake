@@ -270,6 +270,52 @@ mean(ht.efficacy(tb,ta,cb,ca))
 boxplot(ht.efficacy(tb,ta,cb,ca))
 
 
+## Andamento gruppi -----------------------------------------------------
+#selezione tutte le casse trattate: id_hive>48; NOT blocco
+merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
+which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->gr2
+1:48->gr1
+which(fbox_temp$tratt=="fbox")->gr3
+which(fbox_temp$tratt=="ctr")->gr4
+fbox$groups<-as.character(fbox_temp$tratt)
+fbox$groups[gr1]="gr1"
+fbox$groups[gr2]="gr2"
+fbox$groups[gr3]="gr3"
+fbox$groups[gr4]="gr4"
+boxplot(fbox$t0_ss900,fbox$t1_ss900,fbox$t2_ss900,fbox$t3_ss900)
+boxplot(fbox$t0_ss900[gr1],fbox$t1_ss900[gr1],fbox$t2_ss900[gr1],fbox$t3_ss900[gr1],col=2)
+boxplot(fbox$t0_ss900[gr2],fbox$t1_ss900[gr2],fbox$t2_ss900[gr2],fbox$t3_ss900[gr2],col=3,add=T)
+boxplot(fbox$t0_ss900[gr3],fbox$t1_ss900[gr3],fbox$t2_ss900[gr3],fbox$t3_ss900[gr3],col=4,add=T)
+boxplot(fbox$t0_ss900[gr4],fbox$t1_ss900[gr4],fbox$t2_ss900[gr4],fbox$t3_ss900[gr4],col=5,add=T)
+
+tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T)
+
+
+(tapply(fbox$t0_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t1_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t2_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t3_ss900,fbox$groups,median,na.rm=T))->mediana
+row.names(mediana)<-c("t0","t1","t2","t3")
+mediana
+
+(tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T))->meana
+row.names(meana)<-c("t0","t1","t2","t3")
+meana
+
+(tapply(fbox$t0_ss900,fbox$groups,var,na.rm=T))->vara
+rbind(vara,tapply(fbox$t1_ss900,fbox$groups,var,na.rm=T))->vara
+rbind(vara,tapply(fbox$t2_ss900,fbox$groups,var,na.rm=T))->vara
+rbind(vara,tapply(fbox$t3_ss900,fbox$groups,var,na.rm=T))->vara
+row.names(vara)<-c("t0","t1","t2","t3")
+vara
+
+#ancova per stimare C?
 
 
 ##altro da fare
