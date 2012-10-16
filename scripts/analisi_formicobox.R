@@ -14,8 +14,8 @@ fbox$t2_ss900<- fbox$t2_ss300_1 + fbox$t2_ss300_2 + fbox$t2_ss300_3 #total sugar
 fbox$t3_ss900<- fbox$t3_ss300_1 + fbox$t3_ss300_2 + fbox$t3_ss300_3 #total sugar shake time 3
 
 # hives selection -------------------------------------------------------
-minvar=1.5  #varroe minime per inclusione
-maxvar=15 #varroe massime per inclusione
+minvar=5.5  #varroe minime per inclusione
+maxvar=300 #varroe massime per inclusione
 !is.na(fbox$t0_ss900-fbox$t1_ss900)->include # NAs removed (only time 0 and 1)
 fbox$t0_ss900<maxvar & fbox$t0_ss900>minvar & include ->include #excluded most infested hives and hives with infestation under 1/900
 
@@ -36,19 +36,20 @@ boxplot(t0_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="
 fboxi$t1_growth<-(fboxi$t1_ss900-fboxi$t0_ss900)/fboxi$t0_ss900*100
 
 #boxplot(t1_growth~tratt)
-boxplot(fboxi$t1_growth~fboxi$t0_treat)
+boxplot(fboxi$t1_growth~fboxi$t0_treat,names=c("trattati","non trattati"))
 
 fboxi_nt<-fboxi[fboxi$t0_treat=="nt",]
 fboxi_fb<-fboxi[fboxi$t0_treat=="fb",]
 
 plot(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 abline(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
-lm(t1_ss900~t0_ss900,data=fboxi_nt)
+summary(lm(t1_ss900~0+t0_ss900,data=fboxi_nt))
 #plot(glm(ss9_at~sqrt(ss9_bt),family=poisson))
 
 
 points(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,pch=3)
 abline(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900)
+summary(lm(t1_ss900~0+t0_ss900,data=fboxi_fb))
 
 ### henderson_tilton
 #ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta*mean(cb))/(tb*mean(ca))))}
@@ -78,6 +79,8 @@ ht.efficacy.quantiles<-function(tb,ta,cb,ca,probs){
   
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 mean(fboxi_fb$t1_ht.eff)
+boxplot(fboxi_fb$t1_ht.eff)
+length(fboxi_fb$t1_ht.eff)
 
 #prova con i quantili
 boxplot(ht.efficacy.quantiles(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900,probs=c(0.25,0.5,0.75)))
@@ -86,7 +89,7 @@ lapply(ht.efficacy.quantiles(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss9
   
 
 sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2#media trasformati
-sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2[1] #ic dati trasformati
+sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100)))$conf.int)^2[1] #ic dati trasformati
 
 boxplot(fboxi_fb$t1_ht.eff)
 
@@ -185,6 +188,8 @@ ht.efficacy(tb,ta,cb,ca)->ht.sug
 mean(ht.efficacy(tb,ta,cb,ca))
 boxplot(ht.efficacy(tb,ta,cb,ca))
 
+boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(.25,.5,.75)))
+
 #correlazione zucchero a t2-cadute in blocco nel controllo
 plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
 #pearson
@@ -234,6 +239,22 @@ abs(eff.cad-ht.sug)->diff.eff #differenze di efficacia tra due metodi
 apply(fbox_blocco_m[,3:12],1,sum)[which(fbox_blocco_m$tratt=="fbox")]->tot_cad_fbox
 plot(tot_cad_fbox,diff.eff,xlab="totale cadute",ylab="differenza di efficacia con i due metodi")
 
+fm.efficacy.abbott<-function(txtf,tctf,cxtf,cctf){
+  #txtf=treated hives - fallen mites during x treatment
+  #tctf=treated hives - control treatment fallen mites
+  #cxtf=control hives - fallen mites during x treatment in treated hives
+  #cctf=control hives - control treatment fallen mites
+  mean(100*cctf/(cxtf+cctf))->Cs
+  100*tctf/(txtf+tctf)->Ts
+  (Cs-Ts)/Cs
+}
+
+txtf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="fbox",3:9],1,sum)
+tctf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="fbox",10:12],1,sum)
+cxtf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="ctr",3:9],1,sum)
+cctf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="ctr",10:12],1,sum)
+fm.efficacy.abbott(txtf,tctf,cxtf,cctf)
+
 #dato che media = varianza e non media=sd significa che all'aumentare della media in proporzione aumenta di più la precisione
 #fare correzione di abbott a dati cadute (?)
 
@@ -265,11 +286,76 @@ fbox$t2_ss900[treat_indices]->ta
 fbox$t1_ss900[ctr_indices]->cb
 fbox$t2_ss900[ctr_indices]->ca
 ht.efficacy(tb,ta,cb,ca)
-#ht.efficacy(tb,ta,cb,ca)->ht.sug
+ht.efficacy(tb,ta,cb,ca)->ht.sug
 mean(ht.efficacy(tb,ta,cb,ca))
+median(ht.efficacy(tb,ta,cb,ca))
+boxplot(ht.sug)
+boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(0.25,0.5,0.75)))
+
+sin(mean(asin(sqrt(ht.sug/100))))^2#media trasformati
+sin(t.test(asin(sqrt(ht.sug/100)))$conf.int)^2[1] #ic dati trasformati
+
 boxplot(ht.efficacy(tb,ta,cb,ca))
 
 
+## Andamento gruppi -----------------------------------------------------
+#selezione tutte le casse trattate: id_hive>48; NOT blocco
+merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
+which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->gr2
+1:48->gr1
+which(fbox_temp$tratt=="fbox")->gr3
+which(fbox_temp$tratt=="ctr")->gr4
+fbox$groups<-as.character(fbox_temp$tratt)
+fbox$groups[gr1]="gr1"
+fbox$groups[gr2]="gr2"
+fbox$groups[gr3]="gr3"
+fbox$groups[gr4]="gr4"
+boxplot(fbox$t0_ss900/9,fbox$t1_ss900/9,fbox$t2_ss900/9,fbox$t3_ss900/9)
+abline(h=5,col="red",lty=2)
+boxplot(fbox$t0_ss900[gr1]/9,fbox$t1_ss900[gr1]/9,fbox$t2_ss900[gr1]/9,fbox$t3_ss900[gr1]/9,col=2)
+abline(h=5,col="red",lty=2)
+
+boxplot(fbox$t0_ss900[gr2]/9,fbox$t1_ss900[gr2]/9,fbox$t2_ss900[gr2]/9,fbox$t3_ss900[gr2]/9,col=3,add=F)
+abline(h=5,col="red",lty=2)
+
+boxplot(fbox$t0_ss900[gr3]/9,fbox$t1_ss900[gr3]/9,fbox$t2_ss900[gr3]/9,fbox$t3_ss900[gr3]/9,col=4,add=T)
+abline(h=5,col="red",lty=2)
+
+
+boxplot(fbox$t0_ss900[gr4]/9,fbox$t1_ss900[gr4]/9,fbox$t2_ss900[gr4]/9,fbox$t3_ss900[gr4]/9,col=5,add=F)
+abline(h=5,col="red",lty=2)
+
+
+tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T)
+
+
+(tapply(fbox$t0_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t1_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t2_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t3_ss900,fbox$groups,median,na.rm=T))->mediana
+row.names(mediana)<-c("t0","t1","t2","t3")
+format(mediana/9,digits=2)
+
+(tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T))->meana
+row.names(meana)<-c("t0","t1","t2","t3")
+meana/9
+format(meana/9,digits=2)
+
+# 
+# (tapply(asin(sqrt(fbox$t0_ss900)),fbox$groups,var,na.rm=T))->vara
+# rbind(vara,tapply(asin(sqrt(fbox$t1_ss900)),fbox$groups,var,na.rm=T))->vara
+# rbind(vara,tapply(asin(sqrt(fbox$t2_ss900)),fbox$groups,var,na.rm=T))->vara
+# rbind(vara,tapply(asin(sqrt(fbox$t3_ss900)),fbox$groups,var,na.rm=T))->vara
+# row.names(vara)<-c("t0","t1","t2","t3")
+# sin(vara)^2
+# format(vara/9,digits=2)
+# #ancova per stimare C?
 
 
 ##altro da fare
