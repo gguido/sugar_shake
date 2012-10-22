@@ -1,6 +1,13 @@
+# Preamble ----------------------------------------------------------------
 #
 detach()
 rm(list=ls())
+
+require(MASS)
+library("fitdistrplus")
+
+
+
 
 # data load ---------------------------------------------------------------
 fbox <- read.csv("../data/fbox_def.csv", sep=",")
@@ -95,6 +102,23 @@ boxplot(fboxi_fb$t1_ht.eff)
 
 
 fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
+
+
+plot.nbinom<-function(data){
+  fitdist(data,"nbinom")$estimate->estnbin
+  hist(data,freq=F,breaks=max(data))
+  x<-1:max(data)
+  dnbinom(x,size=estnbin[1],mu=estnbin[2])->y
+  lines(x,y,col="red")
+  print(estnbin)
+  print(estnbin[2]+(estnbin[2]^2/estnbin[1]))
+  gofstat(fitdist(data,"nbinom"),print.test=T)
+}
+fbox$t1_ss900[!is.na(fbox$t1_ss900) & (fbox$groups=="gr1"|fbox$groups=="gr2"|fbox$groups=="gr3")]->data
+plot.nbinom(data)
+var(data)
+##fare distribuzioni delle varie specie prima e dopo il trattamento
+
 # 
 # 
 # ((mss9fbbt*m_eff_plac)-mss9fbat)/(mss9fbbt*m_eff_plac) ### efficacia del formicobox
