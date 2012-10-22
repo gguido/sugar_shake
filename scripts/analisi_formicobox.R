@@ -1,7 +1,7 @@
 #
 detach()
 rm(list=ls())
-
+setwd("./scripts/")
 # data load ---------------------------------------------------------------
 fbox <- read.csv("../data/fbox_def.csv", sep=",")
 fbox$t0_treat<-c(rep("fb",48),rep("nt",48))   #treatments: fbox, no treatment
