@@ -180,6 +180,10 @@ Al netto delle casse con problemi di regina sono rimasti nella prova \Sexpr{num_
      
 \subsection{Efficacia e fattibilità del trattamento Fbox}
 
+%% referenza per alcoohl wash: De Jong, D., D. De Andrea Roma, and L. S. Gonalves.1982b. A comparative analysis of shaking solutions forthe detection of Varroa jacobsoni on adult honeybees.Apidologie 13: 297Ð306.
+% ma noi abbiamo usato la versione consigliata da arsa cercare sito internet.
+
+
 \section {Discussione}
 La variabilità dell'efficacia del trattamento in presenza di covata potenzialmente influenzato dalla reinfestazione, oltre che dall'errore sistematico che deriva dal campionamento e dalla possibile variazione del rapporto tra varroe foretiche e varroe in riproduzione. %commenti su drifting (cercare reinfestation in biblio zotero).
 Anche la variazione della popolazione di api adulte, che non è uguale nelle casse, è una causa di variabilità importante e dovrebbe essere valutata nel disegno sperimentale.
