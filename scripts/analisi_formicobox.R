@@ -1,6 +1,6 @@
 # Preamble ----------------------------------------------------------------
 #
-detach()
+#detach()
 rm(list=ls())
 
 require(MASS)
@@ -11,7 +11,7 @@ library("fitdistrplus")
 
 # data load ---------------------------------------------------------------
 fbox <- read.csv("../data/fbox_def.csv", sep=",")
-fbox$t0_treat<-c(rep("fb",48),rep("nt",48))   #treatments: fbox, no treatment
+fbox$t0_treat<-as.factor(c(rep("fb",48),rep("nt",48)))   #treatments: fbox, no treatment
 
 # 900 bees sums -----------------------------------------------------------
 
