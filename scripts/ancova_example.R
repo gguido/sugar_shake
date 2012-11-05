@@ -154,4 +154,3 @@ lines(xv,yv)
 phv<-rep("low",101)
 yv<-predict(model1,list(pH=factor(phv),Biomass=xv),type="response")
 lines(xv,yv)
->>>>>>> f58576216e45d2bcda070a570e069247d29b2eac

@@ -21,7 +21,7 @@ fbox$t2_ss900<- fbox$t2_ss300_1 + fbox$t2_ss300_2 + fbox$t2_ss300_3 #total sugar
 fbox$t3_ss900<- fbox$t3_ss300_1 + fbox$t3_ss300_2 + fbox$t3_ss300_3 #total sugar shake time 3
 
 # hives selection -------------------------------------------------------
-minvar=5.5  #varroe minime per inclusione
+minvar=-1  #varroe minime per inclusione
 maxvar=300 #varroe massime per inclusione
 !is.na(fbox$t0_ss900-fbox$t1_ss900)->include # NAs removed (only time 0 and 1)
 fbox$t0_ss900<maxvar & fbox$t0_ss900>minvar & include ->include #excluded most infested hives and hives with infestation under 1/900
