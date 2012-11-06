@@ -389,7 +389,7 @@ format(meana/9,digits=2)
 #da fare in treno:
 #commenti alle analisi presenti
 #henderson tilton sulle casse non bloccate ma formicate a t1
-=======
+#=======
 #
 detach()
 rm(list=ls())

@@ -35,14 +35,14 @@ La valutazione dell'infestazione da varroa tramite il metodo dello zucchero a ve
 Lo zucchero a velo è utilizzato da alcuni ricercatori per esempio \citet{bulacio_cagnolo_control_2012} per stimare l'efficia di un trattamento acaricida, anche in presenza di covata.
 %Trattazione degli errori, confronto con metodo trattamento di controllo.
 Con la presente prova abbiamo inteso valutare gli aspetti pratici e teorici di tale applicazione.\\
-Il lavoro ci ha consentito inoltre di misurare alcuni parametri per una simulazione di tipo Monte Carlo dell'utilizzo dello zucchero a velo per valutare l'efficacia di un trattamento acaricida in assenza di covata, che sarà oggetto di una relazione a parte.
+Il lavoro ci ha consentito inoltre di misurare alcuni parametri per una simulazione di tipo Monte Carlo dell'utilizzo dello zucchero a velo per valutare l'efficacia di un trattamento acaricida in assenza di covata, che sarà oggetto di una relazione successiva.
 
 \section{Materiali e metodi}
   \subsection{Apiario}
   Gli alveari utilizzati per la prova provengono da un apiario nomade composto da api di tre diverse origini %elencare e dividere le origini?!?
-  con una storia comune iniziata a marzo 2012. Le api sono in parte \textit{Apis mellifera ligustica} ed in parte ibridi Buckfast.\\
+  con una storia comune iniziata a marzo 2012. Le api sono in parte \textit{Apis mellifera ligustica} ed in parte ibridi Buckfast e carnica.\\
   L'apiario era composto originariamente di 96 famiglie, a cui sono state sottratte le casse che hanno incontrato problemi di orfanità nel corso della prova.\\
-  Gli alveari sono stati assegnati ai diversi gruppi/trattamenti in base alla disposizione nell'apiario, in modo da minimizzare il rischio che il fenomeno della deriva potesse determinare lo spostamento di parassiti tra i gruppi.
+  Gli alveari sono stati assegnati a diversi gruppi/trattamenti in base alla disposizione nell'apiario, in modo da raggrupparli e minimizzare il rischio che il fenomeno della deriva potesse determinare lo spostamento di acari tra i gruppi.
 
   \subsection{Campionamenti}% correggere tutto in prima persona
   A partire da giugno 2012, fino a settembre il livello di infestazione delle api adulte è stato monitorato mensilmente in tutte le casse rimaste nella prova. E' stato utilizzato il metodo descritto su l'Apis da \citet{vesco_varroa:_2012}, a sua volta basato sugli articoli di \citet{lee_practical_2010,lee_standardized_2010}. Per aumentare la precisione della misurazione dell'infestazione abbiamo effettuato il conteggio su tre campioni di 100 ml di api \citep{lee_practical_2010}.\\
@@ -69,7 +69,7 @@ tratt<-read.csv2("../data/tratt.csv")
 print(xtable(tratt,caption = "Cronologia dei trattamenti. FBOX= FormicoBox, ING=ingabbiamento della regina, SGA=liberazione della regina, CTR=trattamento di controllo", label = "table:tratt", align="cccccc"), caption.placement = "bottom", include.rownames = F)
 @
 
-    \subsubsection{Valutazione del formicobox con gruppo di controllo}
+    \subsubsection{Valutazione del trattamento con gruppo di controllo}
     Il gruppo 1 è stato trattato con metodica formicobox il giorno \Sexpr{format(tempi[1,2], "%d/%m/%Y")}  (\Sexpr{tempi[1,1]}), immediatamente dopo il monitoraggio con zucchero a velo. Tutte le altre casse non sono state trattate fino a t1, fungendo da gruppo di controllo.\\
     Abbiamo selezionato per la prova gli alveari che, nel gruppo trattato e nel gruppo di controllo, non avessero problemi di regina ed avessero un tasso di infestazione compreso tra \Sexpr{format(minvar/900*100,digits=2)}\% e \Sexpr{format(maxvar/900*100,digits=2)}\%, che possono approssimativamente corrispondere ad un'infestazione di 300 e 3000 varroe \citep{ema_guideline_2010}, calcolando che la popolazione di api media fosse di 60.000 api e che circa 2/3 delle varroe fossero in fase riproduttiva \citep{martin_population_1998}.
     %RIVEDERE
