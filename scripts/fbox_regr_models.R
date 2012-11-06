@@ -8,7 +8,7 @@ points(pre[[2]],post[[2]],pch=17)
 
 model1<-glm(t1_ss900~t0_treat*t0_ss900,data=fboxi,family="poisson")
 summary(model1)
-model2<-glm(t1_ss900~t0_treat+t0_ss900,data=fboxi,family="poisson")
+model2<-glm(t1_ss900~0+t0_treat:sqrt(t0_ss900),data=fboxi,family="poisson")
 summary(model2)
 anova(model1,model2,test="Chi")
 
