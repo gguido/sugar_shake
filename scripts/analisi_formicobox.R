@@ -5,7 +5,7 @@ rm(list=ls())
 
 require(MASS)
 library("fitdistrplus")
-
+source("calculations.R")
 
 
 
@@ -20,9 +20,29 @@ fbox$t1_ss900<- fbox$t1_ss300_1 + fbox$t1_ss300_2 + fbox$t1_ss300_3 #total sugar
 fbox$t2_ss900<- fbox$t2_ss300_1 + fbox$t2_ss300_2 + fbox$t2_ss300_3 #total sugar shake time 2
 fbox$t3_ss900<- fbox$t3_ss300_1 + fbox$t3_ss300_2 + fbox$t3_ss300_3 #total sugar shake time 3
 
+# data load 2 -------------------------------------------------------------
+fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
+merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
+#fbox_blocco_m[which( apply(fbox_blocco_m[,3:12],1,sum)>200),]->fbox_blocco_m
+as.Date(c("2012/7/15","2012/07/18","2012/7/22","2012/07/26","2012/7/30","2012/08/3","2012/08/7","2012/08/8","2012/08/10","2012/08/13"))->Dates.cad
+
+
+
+#selezione tutte le casse trattate: id_hive>48; NOT blocco
+merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
+which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->gr2
+1:48->gr1
+which(fbox_temp$tratt=="fbox")->gr3
+which(fbox_temp$tratt=="ctr")->gr4
+fbox$groups<-as.character(fbox_temp$tratt)
+fbox$groups[gr1]="gr1"
+fbox$groups[gr2]="gr2"
+fbox$groups[gr3]="gr3"
+fbox$groups[gr4]="gr4"
+
 # hives selection -------------------------------------------------------
 minvar=2.5  #varroe minime per inclusione
-maxvar=300 #varroe massime per inclusione
+maxvar=5*9 #varroe massime per inclusione
 !is.na(fbox$t0_ss900-fbox$t1_ss900)->include # NAs removed (only time 0 and 1)
 fbox$t0_ss900<maxvar & fbox$t0_ss900>minvar & include ->include #excluded most infested hives and hives with infestation under 1/900
 
@@ -38,8 +58,11 @@ n_fb<-dim(fboxi[fboxi$t0_treat=="fb",])[1]    # num fbox hives
 
 # t0 infestation
 boxplot(t0_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
+kruskal.test(t0_ss900/9~t0_treat,data=fboxi)
+#t.test(log(t0_ss900)~t0_treat,data=fboxi) non abbiamo certezze sulla distribuzione, specie dopo la selezione: meglio K-W
 
- #fboxi$eff_log<-log(ss9_at+0.5)-log(ss9_bt+0.5)
+
+#fboxi$eff_log<-log(ss9_at+0.5)-log(ss9_bt+0.5)
 fboxi$t1_growth<-(fboxi$t1_ss900-fboxi$t0_ss900)/fboxi$t0_ss900*100
 
 #boxplot(t1_growth~tratt)
@@ -48,41 +71,25 @@ boxplot(fboxi$t1_growth~fboxi$t0_treat,names=c("trattati","non trattati"))
 fboxi_nt<-fboxi[fboxi$t0_treat=="nt",]
 fboxi_fb<-fboxi[fboxi$t0_treat=="fb",]
 
-plot(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
-abline(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
+plot(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900,col="red")
+#abline(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 summary(lm(t1_ss900~0+t0_ss900,data=fboxi_nt))
+abline(lm(t1_ss900~0+t0_ss900,data=fboxi_nt),col="red")
+
 #plot(glm(ss9_at~sqrt(ss9_bt),family=poisson))
 
 
-points(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,pch=3)
-abline(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900)
+points(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,pch=3,col="green")
+#abline(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900)
 summary(lm(t1_ss900~0+t0_ss900,data=fboxi_fb))
+abline(lm(t1_ss900~0+t0_ss900,data=fboxi_fb),col="green")
+
+model_lm<-lm(t1_ss900~0+t0_treat:t0_ss900,data=fboxi)
+ht.coeff(coef(model_lm)[1],coef(model_lm)[2])
+
+
 
 ### henderson_tilton
-#ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta*mean(cb))/(tb*mean(ca))))}
-ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)/mean(ca/cb)))}
-#ht.efficacy<-function(tb,ta,cb,ca){100*(1-((mean(ta/tb)*mean(cb/ca))))}
-
-ht.efficacy.quantiles<-function(tb,ta,cb,ca,probs){
-  if(max(probs)>=1 | min(probs<=0))
-    {paste("Error, probs must be strictly comprised between 0 and 1")}
-  else{
-    probs<-c(0,probs,1)
-    ht.effq<-NULL
-    for(i in 1:(length(probs)-1)){
-      rank(tb,ties.method="first")/length(tb)->rtb
-      rank(cb,ties.method="first")/length(cb)->rcb
-      tb[rtb>probs[i] & rtb<=probs[i+1]]->tbq
-      cb[rcb>probs[i] & rcb<=probs[i+1]]->cbq
-      ta[rtb>probs[i] & rtb<=probs[i+1]]->taq
-      ca[rcb>probs[i] & rcb<=probs[i+1]]->caq
-      100*(1-((taq/tbq)/mean(caq/cbq)))->ht.effqi
-      ht.effqi->ht.effq[[i]]
-    }
-    ht.effq
-  }
-}
-
   
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 mean(fboxi_fb$t1_ht.eff)
@@ -95,14 +102,270 @@ lapply(ht.efficacy.quantiles(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss9
 
   
 
-sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2#media trasformati
-sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100)))$conf.int)^2[1] #ic dati trasformati
+sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff))))^2#media trasformati
+sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff)))$conf.int)^2[1] #ic dati trasformati
+#t.test perché tiene conto della numerosità del campione (la distr. normale no)
 
-boxplot(fboxi_fb$t1_ht.eff)
+boxplot(fboxi_fb$t1_ht.eff,ylim=c(0,1)) #plot dell'efficacia henderson tilton
+
+###confronto abbott - ht ------------------
+abbott.pc(Survival(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900),Survival(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900))->apc
+cbind(fboxi_fb$t1_ht.eff,apc) #risultato: gli stessi valori con henderson-tilton e abbott
 
 
-fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
 
+# 
+# ((mss9fbbt*m_eff_plac)-mss9fbat)/(mss9fbbt*m_eff_plac) ### efficacia del formicobox
+# ## ic con il bootstrap?!?
+# attach(dataplac)
+# hist(ss9_bt,breaks=0:35,ylim=c(0,30),main="Infestazione al giorno 0",xlab="varroe/900 api",ylab="frequenza")
+# hist(ss9_at,breaks=0:35,ylim=c(0,30),main="Infestazione al giorno 30",xlab="varroe/900 api",ylab="frequenza")
+# #capire come gestire gli zeri iniziali
+# detach(dataplac)
+# 
+# attach(fboxi)
+# order(cassa)->ordine
+# rbind(ss9_bt[ordine],ss9_at[ordine])->counts
+# row.names(counts)<-c("prima","dopo")
+# names(counts)<-cassa[ordine]
+# barplot(counts, main="Infestazione delle api adulte",
+#         xlab="Famiglie", col=c("white","yellow"),ylab="Varroe/900 api",
+#         legend = rownames(counts), beside=TRUE)
+# barplot(counts[1,], main="Infestazione delle api adulte prima del trattamento",
+#         xlab="Famiglie", col=c(rep("black",dim(datafb)[1]),rep("red",dim(dataplac)[1])),ylab="Varroe/900 api",ylim=c(0,35))
+# barplot(counts[2,], main="Infestazione delle api adulte un mese dopo il trattamento",
+#         xlab="Famiglie", col=c(rep("black",dim(datafb)[1]),rep("red",dim(dataplac)[1])),ylab="Varroe/900 api")
+# 
+# 
+# 
+# rbind(-(ss9_bt[ordine]-ss9_at[ordine]))->counts
+# barplot(counts, main="Car Distribution",
+#         xlab="Number of Gears") 
+# 
+# barplot(fboxi$eff_log[ordine], main="",
+#         xlab="")
+# fboxi$aumentoperc<-(ss9_at-ss9_bt)*100/(ss9_bt+0.5)
+# as.numeric(as.factor(tratt[ordine]))->coloritratt
+# barplot(fboxi$aumentoperc[ordine], ylab="Variazione dell'infestazione (%)",
+#         xlab="famiglie",col=coloritratt,main="Variazione dell'infestazione in un mese")
+# mean(fboxi$aumentoperc[tratt=="fb"])
+# mean(fboxi$aumentoperc[tratt=="plac"])
+# (mean(fboxi$aumentoperc[tratt=="plac"])-(mean(fboxi$aumentoperc[tratt=="fb"])))/mean(fboxi$aumentoperc[tratt=="plac"])
+# boxplot(fboxi$aumentoperc~tratt)
+# boxplot(fboxi$eff_log~tratt)
+# boxplot(fboxi$ss9_at~tratt)
+# as.character(ora.insacco%/%1)->ora
+# as.character(round(ora.insacco%%1,digits=2)*100)->minu
+# plot(strptime(paste(ora,minu,sep=":"),format="%H:%M")[tratt=="fb"],fboxi$aumentoperc[tratt=="fb"],type="h",lwd=2,ylab="Variazione dell'infestazione (%)",xlab="ora di insacco")
+# plot(strptime(paste(ora,minu,sep=":"),format="%H:%M")[tratt=="fb"],fboxi$ss9_at[tratt=="fb"],type="h",lwd=2,ylab="Varroe/900 api dopo il trattamento",xlab="ora di insacco")
+# rm(ora,minu)
+# detach(fboxi)
+# 
+# Blocco di covata --------------------------------------------------------
+# 
+fbox_blocco_m[fbox_blocco_m$tratt=="ctr",c(3:12)]->cadute_ctr
+fbox_blocco_m[fbox_blocco_m$tratt=="fbox",c(3:12)]->cadute_fbox
+dim(cadute_ctr)[1]->num_ctr #numero di alveari nell'esperimento
+dim(cadute_fbox)[1]->num_fbox
+plot(Dates.cad,apply(cadute_fbox,2,mean),type="l") #andamento medio caduta
+plot(Dates.cad,apply(cadute_ctr,2,mean),type="l")
+#plot(apply(fbox_blocco_m[,c(3:12)],1,sum),fbox_blocco_m$)
+
+#boxplot cadute, usare caduta giornaliera e non dati assoluti (3 e 4 giorni)
+boxplot(cadute_ctr,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti")
+lines(x=c(7.5,7.5),y=c(0,max(cadute_ctr)),lwd=3,col="red")
+text(7.5,max(cadute_ctr),"trattamento di controllo",adj=1,col="red")
+boxplot(cadute_fbox,names=(Dates.cad-as.Date("2012/07/12")))
+lines(x=c(7.5,7.5),y=c(0,max(cadute_fbox)),lwd=3,col="red")
+text(7.5,max(cadute_fbox),"trattamento di controllo",adj=1,col="red")
+boxplot(cadute_fbox[1:7],add=F,col="red",names=(Dates.cad-as.Date("2012/07/12"))[1:7]) #confronto efficacia sotto opercolo
+
+##selezione 2
+minvar2<-5
+
+
+## efficacia sulle cadute
+apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox" & fbox_blocco_m$t1_ss900>minvar2),3:9],1,sum)->txtf
+apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox" & fbox_blocco_m$t1_ss900>minvar2),10:12],1,sum)->tctf
+apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr" & fbox_blocco_m$t1_ss900>minvar2),3:9],1,sum)->cxtf
+apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr" & fbox_blocco_m$t1_ss900>minvar2),10:12],1,sum)->cctf
+fm.efficacy(txtf,tctf)->class
+boxplot(fm.efficacy(txtf,tctf),ylim=c(0,1))
+fm.efficacy.abbott(txtf,tctf,cxtf,cctf)->abb
+boxplot(class,abb,ylim=c(0,1),names=c("efficacia standard","correzione con Abbott"))
+
+# ht.efficacy(tb,ta,cb,ca)
+# ht.efficacy(tb,ta,cb,ca)->ht.cad
+# mean(ht.efficacy(tb,ta,cb,ca))
+# boxplot(ht.efficacy(tb,ta,cb,ca))
+
+# henderson tilton su zucchero
+fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox" & fbox_blocco_m$t1_ss900>minvar2)]->tb
+fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox" & fbox_blocco_m$t1_ss900>minvar2)]->ta
+fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr" & fbox_blocco_m$t1_ss900>minvar2)]->cb
+fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr" & fbox_blocco_m$t1_ss900>minvar2)]->ca
+ht.efficacy(tb,ta,cb,ca)
+ht.efficacy(tb,ta,cb,ca)->ht.sug
+mean(ht.efficacy(tb,ta,cb,ca))
+
+rb<-boxplot(abb,ht.sug,names=c("cadute corr. Abbott","zucchero"),ylim=c(0,1)) 
+c(mean(abb),mean(ht.sug))->mean.values
+points(seq(rb$n), mean.values, pch = 17) #aggiunte medie a boxplot
+
+
+t.test(asin(sqrt(ht.sug)),asin(sqrt(fboxi_fb$t1_ht.eff)))$p.value
+
+t.test(asin(sqrt(ht.sug)),asin(sqrt(abb)))
+
+#boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(.25,.5,.75)))
+
+#correlazione zucchero a t2-cadute in blocco nel controllo
+plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
+#pearson
+cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum))
+#regressione per origine
+lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum))->linear_model
+abline(linear_model)
+summary(linear_model)
+#numero medio di api post blocco api/campione varroe/api/campione 
+100/linear_model$coefficients
+
+# #idem senza 76 e 77
+# fbox_blocco_m->fbox_blocco_m_old
+# fbox_blocco_m[-c(6,7),]->fbox_blocco_m
+# #correlazione zucchero a t2-cadute in blocco nel controllo
+# plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
+# #pearson
+# cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum))
+# #regressione per origine
+# lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum))->linear_model
+# abline(linear_model)
+# summary(linear_model)
+#numero medio di api post blocco api/campione varroe/api/campione 
+100/linear_model$coefficients
+#ripristino dati
+#fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
+#merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
+#rm(fbox_blocco_m_old)
+
+#fare stessa correlazione tra totale cadute e zucchero a t1
+#distinguendo tra trattati e non trattati
+#perché in trattati si è interrotta la riproduzione
+
+# #calcolo efficacia metodo classico delle cadute.
+# eff.class<-apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum)
+# eff.class[which(fbox_blocco_m$tratt=="fbox")]->eff.cad
+# rm(eff.class)
+# #confronto con zucchero
+# rb<-boxplot(eff.cad,ht.sug,names=c("cadute","zucchero"),ylim=c(0,1)) 
+# c(mean(eff.cad),mean(ht.sug))->mean.values
+# points(seq(rb$n), mean.values, pch = 17) #aggiunte medie a boxplot
+# mean(eff.cad)
+# mean(ht.sug)
+# plot(eff.cad,ht.sug)
+# cbind(eff.cad,ht.sug)
+# abs(eff.cad-ht.sug)->diff.eff #differenze di efficacia tra due metodi
+# apply(fbox_blocco_m[,3:12],1,sum)[which(fbox_blocco_m$tratt=="fbox")]->tot_cad_fbox
+# plot(tot_cad_fbox,diff.eff,xlab="totale cadute",ylab="differenza di efficacia con i due metodi")
+
+# fm.efficacy.abbott<-function(txtf,tctf,cxtf,cctf){
+#   #txtf=treated hives - fallen mites during x treatment
+#   #tctf=treated hives - control treatment fallen mites
+#   #cxtf=control hives - fallen mites during x treatment in treated hives
+#   #cctf=control hives - control treatment fallen mites
+#   mean(100*cctf/(cxtf+cctf))->Cs
+#   100*tctf/(txtf+tctf)->Ts
+#   (Cs-Ts)/Cs
+# }
+
+txtf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="fbox",3:9],1,sum)
+tctf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="fbox",10:12],1,sum)
+cxtf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="ctr",3:9],1,sum)
+cctf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="ctr",10:12],1,sum)
+fm.efficacy.abbott(txtf,tctf,cxtf,cctf)
+
+#dato che media = varianza e non media=sd significa che all'aumentare della media in proporzione aumenta di più la precisione
+#fare correzione di abbott a dati cadute (?)
+
+curve(sqrt(x)/x,0,10)
+
+
+# henderson tilton su zucchero t1 -----------------------------------------
+
+##selezione casse trattate
+  #selezione tutte le casse trattate: id_hive>48; NOT blocco
+  merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
+  which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->treat_indices
+  #eliminazioni orfane/dati mancanti
+  intersect(which(!is.na(fbox$t1_ss900+fbox$t2_ss900)),treat_indices)->treat_indices #questi sono indici
+  #eliminazione infestazione inadeguata
+  intersect(which(fbox$t1_ss900<maxvar & fbox$t1_ss900>minvar),treat_indices) ->treat_indices
+  #intersect(which(fbox$t1_ss900>minvar),treat_indices) ->treat_indices #senza massimo
+##selezione casse controllo
+  #selezione tutte le casse trattate: id_hive<48; NOT blocco
+  which((fbox_temp$t0_treat=="fb") & is.na(fbox_temp$tratt))->ctr_indices
+  #eliminazioni orfane/dati mancanti
+  intersect(which(!is.na(fbox$t1_ss900+fbox$t2_ss900)),ctr_indices)->ctr_indices #questi sono indici
+  #eliminazione infestazione inadeguata
+  intersect(which(fbox$t1_ss900<maxvar & fbox$t1_ss900>minvar),ctr_indices)->ctr_indices
+  #intersect(which(fbox$t1_ss900>minvar),ctr_indices)->ctr_indices #senza massimo
+
+fbox$t1_ss900[treat_indices]->tb
+fbox$t2_ss900[treat_indices]->ta
+fbox$t1_ss900[ctr_indices]->cb
+fbox$t2_ss900[ctr_indices]->ca
+ht.efficacy(tb,ta,cb,ca)
+ht.efficacy(tb,ta,cb,ca)->ht.sug2
+mean(ht.efficacy(tb,ta,cb,ca))
+median(ht.efficacy(tb,ta,cb,ca))
+boxplot(ht.sug2)
+boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(0.25,0.5,0.75)))
+
+sin(mean(asin(sqrt(ht.sug2/100))))^2#media trasformati
+sin(t.test(asin(sqrt(ht.sug2/100)))$conf.int)^2[1] #ic dati trasformati
+
+boxplot(ht.efficacy(tb,ta,cb,ca))
+
+
+## Andamento gruppi -----------------------------------------------------
+
+boxplot(fbox$t0_ss900/9,fbox$t1_ss900/9,fbox$t2_ss900/9,fbox$t3_ss900/9)
+abline(h=5,col="red",lty=2)
+
+round(max(fbox$t1_ss900/9,na.rm=T)+1)->ylimdef
+boxplot(fbox$t0_ss900[gr1]/9,fbox$t1_ss900[gr1]/9,fbox$t2_ss900[gr1]/9,fbox$t3_ss900[gr1]/9,names=c("9 giu","12 lug","8 ago","18 set"),ylim=c(1,ylimdef))
+abline(h=5,col="red",lty=2)
+
+boxplot(fbox$t0_ss900[gr2]/9,fbox$t1_ss900[gr2]/9,fbox$t2_ss900[gr2]/9,fbox$t3_ss900[gr2]/9,names=c("9 giu","12 lug","8 ago","18 set"),ylim=c(1,ylimdef))
+abline(h=5,col="red",lty=2)
+
+boxplot(fbox$t0_ss900[gr3]/9,fbox$t1_ss900[gr3]/9,fbox$t2_ss900[gr3]/9,fbox$t3_ss900[gr3]/9,names=c("9 giu","12 lug","8 ago","18 set"),ylim=c(1,ylimdef))
+abline(h=5,col="red",lty=2)
+
+boxplot(fbox$t0_ss900[gr4]/9,fbox$t1_ss900[gr4]/9,fbox$t2_ss900[gr4]/9,fbox$t3_ss900[gr4]/9,names=c("9 giu","12 lug","8 ago","18 set"),ylim=c(1,ylimdef))
+abline(h=5,col="red",lty=2)
+
+
+tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T)
+tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T)
+
+
+(tapply(fbox$t0_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t1_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t2_ss900,fbox$groups,median,na.rm=T))->mediana
+rbind(mediana,tapply(fbox$t3_ss900,fbox$groups,median,na.rm=T))->mediana
+row.names(mediana)<-c("t0","t1","t2","t3")
+format(mediana/9,digits=2)
+
+(tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T))->meana
+rbind(meana,tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T))->meana
+row.names(meana)<-c("t0","t1","t2","t3")
+meana/9
+format(meana/9,digits=2)
 
 plot.nbinom<-function(data){
   fitdist(data,"nbinom")$estimate->estnbin
@@ -115,261 +378,7 @@ plot.nbinom<-function(data){
   gofstat(fitdist(data,"nbinom"),print.test=T)
 }
 fbox$t1_ss900[!is.na(fbox$t1_ss900) & (fbox$groups=="gr1"|fbox$groups=="gr2"|fbox$groups=="gr3")]->data
-plot.nbinom(data)
-var(data)
-##fare distribuzioni delle varie specie prima e dopo il trattamento
-
-# 
-# 
-# ((mss9fbbt*m_eff_plac)-mss9fbat)/(mss9fbbt*m_eff_plac) ### efficacia del formicobox
-# ## ic con il bootstrap?!?
-# attach(dataplac)
-# hist(ss9_bt,breaks=0:35,ylim=c(0,30),main="Infestazione al giorno 0",xlab="varroe/900 api",ylab="frequenza")
-# hist(ss9_at,breaks=0:35,ylim=c(0,30),main="Infestazione al giorno 30",xlab="varroe/900 api",ylab="frequenza")
-# #capire come gestire gli zeri iniziali
-# detach(dataplac)
-# 
-# attach(fboxi)
-# order(cassa)->ordine
-# rbind(ss9_bt[ordine],ss9_at[ordine])->counts
-# row.names(counts)<-c("prima","dopo")
-# names(counts)<-cassa[ordine]
-# barplot(counts, main="Infestazione delle api adulte",
-#         xlab="Famiglie", col=c("white","yellow"),ylab="Varroe/900 api",
-#         legend = rownames(counts), beside=TRUE)
-# barplot(counts[1,], main="Infestazione delle api adulte prima del trattamento",
-#         xlab="Famiglie", col=c(rep("black",dim(datafb)[1]),rep("red",dim(dataplac)[1])),ylab="Varroe/900 api",ylim=c(0,35))
-# barplot(counts[2,], main="Infestazione delle api adulte un mese dopo il trattamento",
-#         xlab="Famiglie", col=c(rep("black",dim(datafb)[1]),rep("red",dim(dataplac)[1])),ylab="Varroe/900 api")
-# 
-# 
-# 
-# rbind(-(ss9_bt[ordine]-ss9_at[ordine]))->counts
-# barplot(counts, main="Car Distribution",
-#         xlab="Number of Gears") 
-# 
-# barplot(fboxi$eff_log[ordine], main="",
-#         xlab="")
-# fboxi$aumentoperc<-(ss9_at-ss9_bt)*100/(ss9_bt+0.5)
-# as.numeric(as.factor(tratt[ordine]))->coloritratt
-# barplot(fboxi$aumentoperc[ordine], ylab="Variazione dell'infestazione (%)",
-#         xlab="famiglie",col=coloritratt,main="Variazione dell'infestazione in un mese")
-# mean(fboxi$aumentoperc[tratt=="fb"])
-# mean(fboxi$aumentoperc[tratt=="plac"])
-# (mean(fboxi$aumentoperc[tratt=="plac"])-(mean(fboxi$aumentoperc[tratt=="fb"])))/mean(fboxi$aumentoperc[tratt=="plac"])
-# boxplot(fboxi$aumentoperc~tratt)
-# boxplot(fboxi$eff_log~tratt)
-# boxplot(fboxi$ss9_at~tratt)
-# as.character(ora.insacco%/%1)->ora
-# as.character(round(ora.insacco%%1,digits=2)*100)->minu
-# plot(strptime(paste(ora,minu,sep=":"),format="%H:%M")[tratt=="fb"],fboxi$aumentoperc[tratt=="fb"],type="h",lwd=2,ylab="Variazione dell'infestazione (%)",xlab="ora di insacco")
-# plot(strptime(paste(ora,minu,sep=":"),format="%H:%M")[tratt=="fb"],fboxi$ss9_at[tratt=="fb"],type="h",lwd=2,ylab="Varroe/900 api dopo il trattamento",xlab="ora di insacco")
-# rm(ora,minu)
-# detach(fboxi)
-# 
-# Blocco di covata --------------------------------------------------------
-# 
-# carico dati
-fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
-merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
-#fbox_blocco_m[which( apply(fbox_blocco_m[,3:12],1,sum)>200),]->fbox_blocco_m
-as.Date(c("2012/7/15","2012/07/18","2012/7/22","2012/07/26","2012/7/30","2012/08/3","2012/08/7","2012/08/8","2012/08/10","2012/08/13"))->Dates.cad
-fbox_blocco_m[fbox_blocco_m$tratt=="ctr",c(3:12)]->cadute_ctr
-fbox_blocco_m[fbox_blocco_m$tratt=="fbox",c(3:12)]->cadute_fbox
-dim(cadute_ctr)[1]->num_ctr #numero di alveari nell'esperimento
-dim(cadute_fbox)[1]->num_fbox
-plot(Dates.cad,apply(cadute_fbox,2,mean),type="l") #andamento medio caduta
-plot(Dates.cad,apply(cadute_ctr,2,mean),type="l")
-#plot(apply(fbox_blocco_m[,c(3:12)],1,sum),fbox_blocco_m$)
-
-#boxplot cadute, usare caduta giornaliera e non dati assoluti (3 e 4 giorni)
-boxplot(cadute_ctr,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti")
-lines(x=c(7.5,7.5),y=c(0,max(cadute_ctr)),lwd=3,col="red")
-text(7.5,max(cadute_ctr),"trattamento di controllo",adj=1,col="red")
-boxplot(cadute_fbox,names=(Dates.cad-as.Date("2012/07/12")))
-lines(x=c(7.5,7.5),y=c(0,max(cadute_fbox)),lwd=3,col="red")
-text(7.5,max(cadute_fbox),"trattamento di controllo",adj=1,col="red")
-boxplot(cadute_fbox[1:7],add=F,col="red",names=(Dates.cad-as.Date("2012/07/12"))[1:7]) #confronto efficacia sotto opercolo
-
-# #tb ta cb ca
-# #ht.efficacy()
-# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),3:9],1,sum)->tb
-# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),10:12],1,sum)->ta
-# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),3:9],1,sum)->cb
-# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),10:12],1,sum)->ca
-# ht.efficacy(tb,ta,cb,ca)
-# ht.efficacy(tb,ta,cb,ca)->ht.cad
-# mean(ht.efficacy(tb,ta,cb,ca))
-# boxplot(ht.efficacy(tb,ta,cb,ca))
-
-# henderson tilton su zucchero
-fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")]->tb
-fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")]->ta
-fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")]->cb
-fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")]->ca
-ht.efficacy(tb,ta,cb,ca)
-ht.efficacy(tb,ta,cb,ca)->ht.sug
-mean(ht.efficacy(tb,ta,cb,ca))
-boxplot(ht.efficacy(tb,ta,cb,ca))
-
-boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(.25,.5,.75)))
-
-#correlazione zucchero a t2-cadute in blocco nel controllo
-plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
-#pearson
-cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum))
-#regressione per origine
-lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum))->linear_model
-abline(linear_model)
-summary(linear_model)
-#numero medio di api post blocco api/campione varroe/api/campione 
-100/linear_model$coefficients
-
-#idem senza 76 e 77
-fbox_blocco_m->fbox_blocco_m_old
-fbox_blocco_m[-c(6,7),]->fbox_blocco_m
-#correlazione zucchero a t2-cadute in blocco nel controllo
-plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
-#pearson
-cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum))
-#regressione per origine
-lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum))->linear_model
-abline(linear_model)
-summary(linear_model)
-#numero medio di api post blocco api/campione varroe/api/campione 
-100/linear_model$coefficients
-#ripristino dati
-fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
-merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
-rm(fbox_blocco_m_old)
-
-#fare stessa correlazione tra totale cadute e zucchero a t1
-#distinguendo tra trattati e non trattati
-#perché in trattati si è intoerrotta la riproduzione
-
-#calcolo efficacia metodo classico delle cadute.
-eff.class<-100*apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum)
-eff.class[which(fbox_blocco_m$tratt=="fbox")]->eff.cad
-rm(eff.class)
-#confronto con zucchero
-rb<-boxplot(eff.cad,ht.sug,names=c("cadute","zucchero")) 
-c(mean(eff.cad),mean(ht.sug))->mean.values
-points(seq(rb$n), mean.values, pch = 17) #aggiunte medie a boxplot
-mean(eff.cad)
-mean(ht.sug)
-plot(eff.cad,ht.sug)
-cbind(eff.cad,ht.sug)
-abs(eff.cad-ht.sug)->diff.eff #differenze di efficacia tra due metodi
-apply(fbox_blocco_m[,3:12],1,sum)[which(fbox_blocco_m$tratt=="fbox")]->tot_cad_fbox
-plot(tot_cad_fbox,diff.eff,xlab="totale cadute",ylab="differenza di efficacia con i due metodi")
-
-fm.efficacy.abbott<-function(txtf,tctf,cxtf,cctf){
-  #txtf=treated hives - fallen mites during x treatment
-  #tctf=treated hives - control treatment fallen mites
-  #cxtf=control hives - fallen mites during x treatment in treated hives
-  #cctf=control hives - control treatment fallen mites
-  mean(100*cctf/(cxtf+cctf))->Cs
-  100*tctf/(txtf+tctf)->Ts
-  (Cs-Ts)/Cs
-}
-
-txtf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="fbox",3:9],1,sum)
-tctf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="fbox",10:12],1,sum)
-cxtf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="ctr",3:9],1,sum)
-cctf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="ctr",10:12],1,sum)
-fm.efficacy.abbott(txtf,tctf,cxtf,cctf)
-
-#dato che media = varianza e non media=sd significa che all'aumentare della media in proporzione aumenta di più la precisione
-#fare correzione di abbott a dati cadute (?)
-
-curve(sqrt(x)/x,0,10)
-
-
-# henderson tilton su zucchero t1 -----------------------------------------
-
-##selezione casse trattate
-  #selezione tutte le casse trattate: id_hive>48; NOT blocco
-  merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
-  which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->treat_indices
-  #eliminazioni orfane/dati mancanti
-  intersect(which(!is.na(fbox$t1_ss900+fbox$t2_ss900)),treat_indices)->treat_indices #questi sono indici
-  #eliminazione infestazione inadeguata
-  intersect(which(fbox$t1_ss900<maxvar & fbox$t1_ss900>minvar),treat_indices) ->treat_indices
-  #intersect(which(fbox$t1_ss900>minvar),treat_indices) ->treat_indices #senza massimo
-##selezione casse controllo
-  #selezione tutte le casse trattate: id_hive<48; NOT blocco
-  which((fbox_temp$t0_treat=="fb") & is.na(fbox_temp$tratt))->ctr_indices
-  #eliminazioni orfane/dati mancanti
-  intersect(which(!is.na(fbox$t1_ss900+fbox$t2_ss900)),ctr_indices)->ctr_indices #questi sono indici
-  #eliminazione infestazione inadeguata
-  intersect(which(fbox$t1_ss900<maxvar & fbox$t1_ss900>minvar),ctr_indices)->ctr_indices
-  #intersect(which(fbox$t1_ss900>minvar),ctr_indices)->ctr_indices #senza massimo
-
-fbox$t1_ss900[treat_indices]->tb
-fbox$t2_ss900[treat_indices]->ta
-fbox$t1_ss900[ctr_indices]->cb
-fbox$t2_ss900[ctr_indices]->ca
-ht.efficacy(tb,ta,cb,ca)
-ht.efficacy(tb,ta,cb,ca)->ht.sug
-mean(ht.efficacy(tb,ta,cb,ca))
-median(ht.efficacy(tb,ta,cb,ca))
-boxplot(ht.sug)
-boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(0.25,0.5,0.75)))
-
-sin(mean(asin(sqrt(ht.sug/100))))^2#media trasformati
-sin(t.test(asin(sqrt(ht.sug/100)))$conf.int)^2[1] #ic dati trasformati
-
-boxplot(ht.efficacy(tb,ta,cb,ca))
-
-
-## Andamento gruppi -----------------------------------------------------
-#selezione tutte le casse trattate: id_hive>48; NOT blocco
-merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
-which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->gr2
-1:48->gr1
-which(fbox_temp$tratt=="fbox")->gr3
-which(fbox_temp$tratt=="ctr")->gr4
-fbox$groups<-as.character(fbox_temp$tratt)
-fbox$groups[gr1]="gr1"
-fbox$groups[gr2]="gr2"
-fbox$groups[gr3]="gr3"
-fbox$groups[gr4]="gr4"
-boxplot(fbox$t0_ss900/9,fbox$t1_ss900/9,fbox$t2_ss900/9,fbox$t3_ss900/9)
-abline(h=5,col="red",lty=2)
-boxplot(fbox$t0_ss900[gr1]/9,fbox$t1_ss900[gr1]/9,fbox$t2_ss900[gr1]/9,fbox$t3_ss900[gr1]/9,col=2)
-abline(h=5,col="red",lty=2)
-
-boxplot(fbox$t0_ss900[gr2]/9,fbox$t1_ss900[gr2]/9,fbox$t2_ss900[gr2]/9,fbox$t3_ss900[gr2]/9,col=3,add=F)
-abline(h=5,col="red",lty=2)
-
-boxplot(fbox$t0_ss900[gr3]/9,fbox$t1_ss900[gr3]/9,fbox$t2_ss900[gr3]/9,fbox$t3_ss900[gr3]/9,col=4,add=T)
-abline(h=5,col="red",lty=2)
-
-
-boxplot(fbox$t0_ss900[gr4]/9,fbox$t1_ss900[gr4]/9,fbox$t2_ss900[gr4]/9,fbox$t3_ss900[gr4]/9,col=5,add=F)
-abline(h=5,col="red",lty=2)
-
-
-tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T)
-tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T)
-tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T)
-tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T)
-
-
-(tapply(fbox$t0_ss900,fbox$groups,median,na.rm=T))->mediana
-rbind(mediana,tapply(fbox$t1_ss900,fbox$groups,median,na.rm=T))->mediana
-rbind(mediana,tapply(fbox$t2_ss900,fbox$groups,median,na.rm=T))->mediana
-rbind(mediana,tapply(fbox$t3_ss900,fbox$groups,median,na.rm=T))->mediana
-row.names(mediana)<-c("t0","t1","t2","t3")
-format(mediana/9,digits=2)
-
-(tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T))->meana
-rbind(meana,tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T))->meana
-rbind(meana,tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T))->meana
-rbind(meana,tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T))->meana
-row.names(meana)<-c("t0","t1","t2","t3")
-meana/9
-format(meana/9,digits=2)
+#plot.nbinom(data)
 
 # 
 # (tapply(asin(sqrt(fbox$t0_ss900)),fbox$groups,var,na.rm=T))->vara
@@ -389,372 +398,3 @@ format(meana/9,digits=2)
 #da fare in treno:
 #commenti alle analisi presenti
 #henderson tilton sulle casse non bloccate ma formicate a t1
-#=======
-#
-detach()
-rm(list=ls())
-setwd("./scripts/")
-# data load ---------------------------------------------------------------
-fbox <- read.csv("../data/fbox_def.csv", sep=",")
-fbox$t0_treat<-c(rep("fb",48),rep("nt",48))   #treatments: fbox, no treatment
-
-# 900 bees sums -----------------------------------------------------------
-
-fbox$t0_ss900<- fbox$t0_ss300_1 + fbox$t0_ss300_2 + fbox$t0_ss300_3 #total sugar shake time 0
-fbox$t1_ss900<- fbox$t1_ss300_1 + fbox$t1_ss300_2 + fbox$t1_ss300_3 #total sugar shake time 1
-fbox$t2_ss900<- fbox$t2_ss300_1 + fbox$t2_ss300_2 + fbox$t2_ss300_3 #total sugar shake time 2
-fbox$t3_ss900<- fbox$t3_ss300_1 + fbox$t3_ss300_2 + fbox$t3_ss300_3 #total sugar shake time 3
-
-# hives selection -------------------------------------------------------
-minvar=5.5  #varroe minime per inclusione
-maxvar=300 #varroe massime per inclusione
-!is.na(fbox$t0_ss900-fbox$t1_ss900)->include # NAs removed (only time 0 and 1)
-fbox$t0_ss900<maxvar & fbox$t0_ss900>minvar & include ->include #excluded most infested hives and hives with infestation under 1/900
-
-fboxi<-fbox[include,] #dataset delle casse in analisi
-rm(include)
-#fboxi<-fboxi[order(fboxi$ss9_bt),] ????? inutile ?????
-
-n_nt<-dim(fboxi[fboxi$t0_treat=="nt",])[1] # num ctr hives
-n_fb<-dim(fboxi[fboxi$t0_treat=="fb",])[1]    # num fbox hives
-
-
-# t1-t0 growth analysis ---------------------------------------------------
-
-# t0 infestation
-boxplot(t0_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
-
- #fboxi$eff_log<-log(ss9_at+0.5)-log(ss9_bt+0.5)
-fboxi$t1_growth<-(fboxi$t1_ss900-fboxi$t0_ss900)/fboxi$t0_ss900*100
-
-#boxplot(t1_growth~tratt)
-boxplot(fboxi$t1_growth~fboxi$t0_treat,names=c("trattati","non trattati"))
-
-fboxi_nt<-fboxi[fboxi$t0_treat=="nt",]
-fboxi_fb<-fboxi[fboxi$t0_treat=="fb",]
-
-plot(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
-abline(fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
-summary(lm(t1_ss900~0+t0_ss900,data=fboxi_nt))
-#plot(glm(ss9_at~sqrt(ss9_bt),family=poisson))
-
-
-points(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,pch=3)
-abline(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900)
-summary(lm(t1_ss900~0+t0_ss900,data=fboxi_fb))
-
-### henderson_tilton
-#ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta*mean(cb))/(tb*mean(ca))))}
-ht.efficacy<-function(tb,ta,cb,ca){100*(1-((ta/tb)/mean(ca/cb)))}
-#ht.efficacy<-function(tb,ta,cb,ca){100*(1-((mean(ta/tb)*mean(cb/ca))))}
-
-ht.efficacy.quantiles<-function(tb,ta,cb,ca,probs){
-  if(max(probs)>=1 | min(probs<=0))
-    {paste("Error, probs must be strictly comprised between 0 and 1")}
-  else{
-    probs<-c(0,probs,1)
-    ht.effq<-NULL
-    for(i in 1:(length(probs)-1)){
-      rank(tb,ties.method="first")/length(tb)->rtb
-      rank(cb,ties.method="first")/length(cb)->rcb
-      tb[rtb>probs[i] & rtb<=probs[i+1]]->tbq
-      cb[rcb>probs[i] & rcb<=probs[i+1]]->cbq
-      ta[rtb>probs[i] & rtb<=probs[i+1]]->taq
-      ca[rcb>probs[i] & rcb<=probs[i+1]]->caq
-      100*(1-((taq/tbq)/mean(caq/cbq)))->ht.effqi
-      ht.effqi->ht.effq[[i]]
-    }
-    ht.effq
-  }
-}
-
-  
-fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
-mean(fboxi_fb$t1_ht.eff)
-boxplot(fboxi_fb$t1_ht.eff)
-length(fboxi_fb$t1_ht.eff)
-
-#prova con i quantili
-boxplot(ht.efficacy.quantiles(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900,probs=c(0.25,0.5,0.75)))
-lapply(ht.efficacy.quantiles(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900,probs=c(0.25,0.5,0.75)),mean)
-
-  
-
-sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2#media trasformati
-sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100)))$conf.int)^2[1] #ic dati trasformati
-
-boxplot(fboxi_fb$t1_ht.eff)
-
-
-fboxi_fb$t2_ss900/fboxi_fb$t1_ss900
-# 
-# 
-# ((mss9fbbt*m_eff_plac)-mss9fbat)/(mss9fbbt*m_eff_plac) ### efficacia del formicobox
-# ## ic con il bootstrap?!?
-# attach(dataplac)
-# hist(ss9_bt,breaks=0:35,ylim=c(0,30),main="Infestazione al giorno 0",xlab="varroe/900 api",ylab="frequenza")
-# hist(ss9_at,breaks=0:35,ylim=c(0,30),main="Infestazione al giorno 30",xlab="varroe/900 api",ylab="frequenza")
-# #capire come gestire gli zeri iniziali
-# detach(dataplac)
-# 
-# attach(fboxi)
-# order(cassa)->ordine
-# rbind(ss9_bt[ordine],ss9_at[ordine])->counts
-# row.names(counts)<-c("prima","dopo")
-# names(counts)<-cassa[ordine]
-# barplot(counts, main="Infestazione delle api adulte",
-#         xlab="Famiglie", col=c("white","yellow"),ylab="Varroe/900 api",
-#         legend = rownames(counts), beside=TRUE)
-# barplot(counts[1,], main="Infestazione delle api adulte prima del trattamento",
-#         xlab="Famiglie", col=c(rep("black",dim(datafb)[1]),rep("red",dim(dataplac)[1])),ylab="Varroe/900 api",ylim=c(0,35))
-# barplot(counts[2,], main="Infestazione delle api adulte un mese dopo il trattamento",
-#         xlab="Famiglie", col=c(rep("black",dim(datafb)[1]),rep("red",dim(dataplac)[1])),ylab="Varroe/900 api")
-# 
-# 
-# 
-# rbind(-(ss9_bt[ordine]-ss9_at[ordine]))->counts
-# barplot(counts, main="Car Distribution",
-#         xlab="Number of Gears") 
-# 
-# barplot(fboxi$eff_log[ordine], main="",
-#         xlab="")
-# fboxi$aumentoperc<-(ss9_at-ss9_bt)*100/(ss9_bt+0.5)
-# as.numeric(as.factor(tratt[ordine]))->coloritratt
-# barplot(fboxi$aumentoperc[ordine], ylab="Variazione dell'infestazione (%)",
-#         xlab="famiglie",col=coloritratt,main="Variazione dell'infestazione in un mese")
-# mean(fboxi$aumentoperc[tratt=="fb"])
-# mean(fboxi$aumentoperc[tratt=="plac"])
-# (mean(fboxi$aumentoperc[tratt=="plac"])-(mean(fboxi$aumentoperc[tratt=="fb"])))/mean(fboxi$aumentoperc[tratt=="plac"])
-# boxplot(fboxi$aumentoperc~tratt)
-# boxplot(fboxi$eff_log~tratt)
-# boxplot(fboxi$ss9_at~tratt)
-# as.character(ora.insacco%/%1)->ora
-# as.character(round(ora.insacco%%1,digits=2)*100)->minu
-# plot(strptime(paste(ora,minu,sep=":"),format="%H:%M")[tratt=="fb"],fboxi$aumentoperc[tratt=="fb"],type="h",lwd=2,ylab="Variazione dell'infestazione (%)",xlab="ora di insacco")
-# plot(strptime(paste(ora,minu,sep=":"),format="%H:%M")[tratt=="fb"],fboxi$ss9_at[tratt=="fb"],type="h",lwd=2,ylab="Varroe/900 api dopo il trattamento",xlab="ora di insacco")
-# rm(ora,minu)
-# detach(fboxi)
-# 
-# Blocco di covata --------------------------------------------------------
-# 
-# carico dati
-fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
-merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
-#fbox_blocco_m[which( apply(fbox_blocco_m[,3:12],1,sum)>200),]->fbox_blocco_m
-as.Date(c("2012/7/15","2012/07/18","2012/7/22","2012/07/26","2012/7/30","2012/08/3","2012/08/7","2012/08/8","2012/08/10","2012/08/13"))->Dates.cad
-fbox_blocco_m[fbox_blocco_m$tratt=="ctr",c(3:12)]->cadute_ctr
-fbox_blocco_m[fbox_blocco_m$tratt=="fbox",c(3:12)]->cadute_fbox
-dim(cadute_ctr)[1]->num_ctr #numero di alveari nell'esperimento
-dim(cadute_fbox)[1]->num_fbox
-plot(Dates.cad,apply(cadute_fbox,2,mean),type="l") #andamento medio caduta
-plot(Dates.cad,apply(cadute_ctr,2,mean),type="l")
-#plot(apply(fbox_blocco_m[,c(3:12)],1,sum),fbox_blocco_m$)
-
-#boxplot cadute, usare caduta giornaliera e non dati assoluti (3 e 4 giorni)
-boxplot(cadute_ctr,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti")
-lines(x=c(7.5,7.5),y=c(0,max(cadute_ctr)),lwd=3,col="red")
-text(7.5,max(cadute_ctr),"trattamento di controllo",adj=1,col="red")
-boxplot(cadute_fbox,names=(Dates.cad-as.Date("2012/07/12")))
-lines(x=c(7.5,7.5),y=c(0,max(cadute_fbox)),lwd=3,col="red")
-text(7.5,max(cadute_fbox),"trattamento di controllo",adj=1,col="red")
-boxplot(cadute_fbox[1:7],add=F,col="red",names=(Dates.cad-as.Date("2012/07/12"))[1:7]) #confronto efficacia sotto opercolo
-
-# #tb ta cb ca
-# #ht.efficacy()
-# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),3:9],1,sum)->tb
-# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="fbox"),10:12],1,sum)->ta
-# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),3:9],1,sum)->cb
-# apply(fbox_blocco_m[which(fbox_blocco_m$tratt=="ctr"),10:12],1,sum)->ca
-# ht.efficacy(tb,ta,cb,ca)
-# ht.efficacy(tb,ta,cb,ca)->ht.cad
-# mean(ht.efficacy(tb,ta,cb,ca))
-# boxplot(ht.efficacy(tb,ta,cb,ca))
-
-# henderson tilton su zucchero
-fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="fbox")]->tb
-fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="fbox")]->ta
-fbox_blocco_m$t1_ss900[which(fbox_blocco_m$tratt=="ctr")]->cb
-fbox_blocco_m$t2_ss900[which(fbox_blocco_m$tratt=="ctr")]->ca
-ht.efficacy(tb,ta,cb,ca)
-ht.efficacy(tb,ta,cb,ca)->ht.sug
-mean(ht.efficacy(tb,ta,cb,ca))
-boxplot(ht.efficacy(tb,ta,cb,ca))
-
-boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(.25,.5,.75)))
-
-#correlazione zucchero a t2-cadute in blocco nel controllo
-plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
-#pearson
-cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum))
-#regressione per origine
-lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum))->linear_model
-abline(linear_model)
-summary(linear_model)
-#numero medio di api post blocco api/campione varroe/api/campione 
-100/linear_model$coefficients
-
-#idem senza 76 e 77
-fbox_blocco_m->fbox_blocco_m_old
-fbox_blocco_m[-c(6,7),]->fbox_blocco_m
-#correlazione zucchero a t2-cadute in blocco nel controllo
-plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute",main="correlazione zucchero t2-cadute in blocco ctr")
-#pearson
-cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum))
-#regressione per origine
-lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum))->linear_model
-abline(linear_model)
-summary(linear_model)
-#numero medio di api post blocco api/campione varroe/api/campione 
-100/linear_model$coefficients
-#ripristino dati
-fbox_blocco <- read.csv("../data/formicobox_blocco_conteggi.csv", sep=";", dec=",")
-merge(fbox_blocco[-c(10,14:23)],fbox,by="id_hive",all.x=T)->fbox_blocco_m #togliere 76 e 77???? [-(6:7),]
-rm(fbox_blocco_m_old)
-
-#fare stessa correlazione tra totale cadute e zucchero a t1
-#distinguendo tra trattati e non trattati
-#perché in trattati si è intoerrotta la riproduzione
-
-#calcolo efficacia metodo classico delle cadute.
-eff.class<-100*apply(fbox_blocco_m[,3:9],1,sum) /  apply(fbox_blocco_m[,3:12],1,sum)
-eff.class[which(fbox_blocco_m$tratt=="fbox")]->eff.cad
-rm(eff.class)
-#confronto con zucchero
-rb<-boxplot(eff.cad,ht.sug,names=c("cadute","zucchero")) 
-c(mean(eff.cad),mean(ht.sug))->mean.values
-points(seq(rb$n), mean.values, pch = 17) #aggiunte medie a boxplot
-mean(eff.cad)
-mean(ht.sug)
-plot(eff.cad,ht.sug)
-cbind(eff.cad,ht.sug)
-abs(eff.cad-ht.sug)->diff.eff #differenze di efficacia tra due metodi
-apply(fbox_blocco_m[,3:12],1,sum)[which(fbox_blocco_m$tratt=="fbox")]->tot_cad_fbox
-plot(tot_cad_fbox,diff.eff,xlab="totale cadute",ylab="differenza di efficacia con i due metodi")
-
-fm.efficacy.abbott<-function(txtf,tctf,cxtf,cctf){
-  #txtf=treated hives - fallen mites during x treatment
-  #tctf=treated hives - control treatment fallen mites
-  #cxtf=control hives - fallen mites during x treatment in treated hives
-  #cctf=control hives - control treatment fallen mites
-  mean(100*cctf/(cxtf+cctf))->Cs
-  100*tctf/(txtf+tctf)->Ts
-  (Cs-Ts)/Cs
-}
-
-txtf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="fbox",3:9],1,sum)
-tctf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="fbox",10:12],1,sum)
-cxtf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="ctr",3:9],1,sum)
-cctf<-apply(fbox_blocco_m[fbox_blocco_m$tratt=="ctr",10:12],1,sum)
-fm.efficacy.abbott(txtf,tctf,cxtf,cctf)
-
-#dato che media = varianza e non media=sd significa che all'aumentare della media in proporzione aumenta di più la precisione
-#fare correzione di abbott a dati cadute (?)
-
-curve(sqrt(x)/x,0,10)
-
-
-# henderson tilton su zucchero t1 -----------------------------------------
-
-##selezione casse trattate
-  #selezione tutte le casse trattate: id_hive>48; NOT blocco
-  merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
-  which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->treat_indices
-  #eliminazioni orfane/dati mancanti
-  intersect(which(!is.na(fbox$t1_ss900+fbox$t2_ss900)),treat_indices)->treat_indices #questi sono indici
-  #eliminazione infestazione inadeguata
-  intersect(which(fbox$t1_ss900<maxvar & fbox$t1_ss900>minvar),treat_indices) ->treat_indices
-  #intersect(which(fbox$t1_ss900>minvar),treat_indices) ->treat_indices #senza massimo
-##selezione casse controllo
-  #selezione tutte le casse trattate: id_hive<48; NOT blocco
-  which((fbox_temp$t0_treat=="fb") & is.na(fbox_temp$tratt))->ctr_indices
-  #eliminazioni orfane/dati mancanti
-  intersect(which(!is.na(fbox$t1_ss900+fbox$t2_ss900)),ctr_indices)->ctr_indices #questi sono indici
-  #eliminazione infestazione inadeguata
-  intersect(which(fbox$t1_ss900<maxvar & fbox$t1_ss900>minvar),ctr_indices)->ctr_indices
-  #intersect(which(fbox$t1_ss900>minvar),ctr_indices)->ctr_indices #senza massimo
-
-fbox$t1_ss900[treat_indices]->tb
-fbox$t2_ss900[treat_indices]->ta
-fbox$t1_ss900[ctr_indices]->cb
-fbox$t2_ss900[ctr_indices]->ca
-ht.efficacy(tb,ta,cb,ca)
-ht.efficacy(tb,ta,cb,ca)->ht.sug
-mean(ht.efficacy(tb,ta,cb,ca))
-median(ht.efficacy(tb,ta,cb,ca))
-boxplot(ht.sug)
-boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(0.25,0.5,0.75)))
-
-sin(mean(asin(sqrt(ht.sug/100))))^2#media trasformati
-sin(t.test(asin(sqrt(ht.sug/100)))$conf.int)^2[1] #ic dati trasformati
-
-boxplot(ht.efficacy(tb,ta,cb,ca))
-
-
-## Andamento gruppi -----------------------------------------------------
-#selezione tutte le casse trattate: id_hive>48; NOT blocco
-merge(fbox,fbox_blocco[-c(10,14:23)],by="id_hive",all.x=T)->fbox_temp
-which((fbox_temp$t0_treat=="nt") & is.na(fbox_temp$tratt))->gr2
-1:48->gr1
-which(fbox_temp$tratt=="fbox")->gr3
-which(fbox_temp$tratt=="ctr")->gr4
-fbox$groups<-as.character(fbox_temp$tratt)
-fbox$groups[gr1]="gr1"
-fbox$groups[gr2]="gr2"
-fbox$groups[gr3]="gr3"
-fbox$groups[gr4]="gr4"
-boxplot(fbox$t0_ss900/9,fbox$t1_ss900/9,fbox$t2_ss900/9,fbox$t3_ss900/9)
-abline(h=5,col="red",lty=2)
-boxplot(fbox$t0_ss900[gr1]/9,fbox$t1_ss900[gr1]/9,fbox$t2_ss900[gr1]/9,fbox$t3_ss900[gr1]/9,col=2)
-abline(h=5,col="red",lty=2)
-
-boxplot(fbox$t0_ss900[gr2]/9,fbox$t1_ss900[gr2]/9,fbox$t2_ss900[gr2]/9,fbox$t3_ss900[gr2]/9,col=3,add=F)
-abline(h=5,col="red",lty=2)
-
-boxplot(fbox$t0_ss900[gr3]/9,fbox$t1_ss900[gr3]/9,fbox$t2_ss900[gr3]/9,fbox$t3_ss900[gr3]/9,col=4,add=T)
-abline(h=5,col="red",lty=2)
-
-
-boxplot(fbox$t0_ss900[gr4]/9,fbox$t1_ss900[gr4]/9,fbox$t2_ss900[gr4]/9,fbox$t3_ss900[gr4]/9,col=5,add=F)
-abline(h=5,col="red",lty=2)
-
-
-tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T)
-tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T)
-tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T)
-tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T)
-
-
-(tapply(fbox$t0_ss900,fbox$groups,median,na.rm=T))->mediana
-rbind(mediana,tapply(fbox$t1_ss900,fbox$groups,median,na.rm=T))->mediana
-rbind(mediana,tapply(fbox$t2_ss900,fbox$groups,median,na.rm=T))->mediana
-rbind(mediana,tapply(fbox$t3_ss900,fbox$groups,median,na.rm=T))->mediana
-row.names(mediana)<-c("t0","t1","t2","t3")
-format(mediana/9,digits=2)
-
-(tapply(fbox$t0_ss900,fbox$groups,mean,na.rm=T))->meana
-rbind(meana,tapply(fbox$t1_ss900,fbox$groups,mean,na.rm=T))->meana
-rbind(meana,tapply(fbox$t2_ss900,fbox$groups,mean,na.rm=T))->meana
-rbind(meana,tapply(fbox$t3_ss900,fbox$groups,mean,na.rm=T))->meana
-row.names(meana)<-c("t0","t1","t2","t3")
-meana/9
-format(meana/9,digits=2)
-
-# 
-# (tapply(asin(sqrt(fbox$t0_ss900)),fbox$groups,var,na.rm=T))->vara
-# rbind(vara,tapply(asin(sqrt(fbox$t1_ss900)),fbox$groups,var,na.rm=T))->vara
-# rbind(vara,tapply(asin(sqrt(fbox$t2_ss900)),fbox$groups,var,na.rm=T))->vara
-# rbind(vara,tapply(asin(sqrt(fbox$t3_ss900)),fbox$groups,var,na.rm=T))->vara
-# row.names(vara)<-c("t0","t1","t2","t3")
-# sin(vara)^2
-# format(vara/9,digits=2)
-# #ancova per stimare C?
-
-
-##altro da fare
-#preparare file a parte per taylor e formule varie su efficacia
-
-
-#da fare in treno:
-#commenti alle analisi presenti
-#henderson tilton sulle casse non bloccate ma formicate a t1
-#fare taylor 1987 (cit. in floris 2001)

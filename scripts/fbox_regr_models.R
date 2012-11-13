@@ -30,6 +30,25 @@ lines(xv,y2v)
 1-(y1v/y2v)
 1-(exp(coef(model2)[1])/(exp(coef(model2)[1]+coef(model2)[2])))
 
+#ancova su dati non trasformati:
+
+model_lm<-lm(t1_ss900~0+t0_treat:t0_ss900,data=fboxi)
+summary(model_lm)
+
+xv<-seq(0,max(fboxi$t0_ss900),1)
+levels(fboxi$t0_treat)
+
+length(xv)
+
+tr1<-factor(rep(levels(fboxi$t0_treat)[1],length(xv)))
+y1v<-predict(model_lm,list(t0_treat=tr1,t0_ss900=xv),type="response")
+lines(xv,y1v,col="red")
+
+tr2<-factor(rep(levels(fboxi$t0_treat)[2],length(xv)))
+y2v<-predict(model_lm,list(t0_treat=tr2,t0_ss900=xv),type="response")
+lines(xv,y2v)
+abline(model_lm,col="green")
+
 #trasformazione sqrt (taylor 1987)
 plot(sqrt(fboxi$t0_ss900),sqrt(fboxi$t1_ss900),type="n",xlab="sqrt varroe/900 api pre-trattamento",ylab="sqrt varroe/900 api post-trattamento")
 pre<-split(sqrt(fboxi$t0_ss900),fboxi$t0_treat)

@@ -16,7 +16,7 @@
 \usepackage[squaren]{SIunits}
 
 
-\title{Trattamento con acido formico ``Formico box'', valutazione con zucchero a velo}
+\title{BOZZA: Trattamento con acido formico ``Formico box'', valutazione con zucchero a velo}
 \author{}
 \date{\today}
 %\SweaveOpts{prefix.string=graphics/plot} % Created a "graphics" subdirectory to save graph files in
@@ -81,7 +81,8 @@ print(xtable(tratt,caption = "Cronologia dei trattamenti. FBOX= FormicoBox, ING=
     
     
     \subsection{Analisi dei dati}
-    L'analisi dei dati è stata eseguita con R \citep{r_development_core_team_r:_2012}, il report redatto con \LaTeX e l'interfaccia 
+    L'analisi dei dati è stata eseguita con R \citep{r_development_core_team_r:_2012}, il report redatto con \LaTeX e l'interfaccia Sweave.
+    
   \subsubsection{Formula di Henderson e Tilton}
 L'efficacia di un trattamento acaricida può essere valutata basandosi sulla differenza di sviluppo delle popolazioni di acari in unità trattate ed unità di controllo. L'approccio fu sviluppato da \citet{henderson_tests_1955} basandosi sulla formula classica di \citet{abbott_method_1925} per risolvere il problema dell'eterogeneità del gruppo di controllo rispetto al gruppo trattato. L'utilizzo della formula di Abbott è anche consigliato dal gruppo di studio sulla varroa CA3686 promosso dalla UE \citep{ca3686_wg_technical_1999}.
 \begin{center}
@@ -90,7 +91,7 @@ ca = k*cb
 \label{equ:control_1}
 \end{equation}
 \end{center}
-La variazione nelle colonie controllo può essere modellizzata secondo l'equazione \ref{equ:control_1}, dove \textit{cb} è il tasso di infestazione delle colonie controllo prima del trattamento, \textit{ca} il tasso di infestazione delle colonie controllo dopo il trattamento, \textit{k} il coefficiente di variazione dell'infestazione dal momento del campionamento precedente il trattamento al momento del campionamento successivo al trattamento.
+La variazione nelle colonie controllo può essere modellizzata secondo l'equazione \ref{equ:control_1}, dove \textit{cb} è il tasso di infestazione delle colonie controllo prima del trattamento, \textit{ca} il tasso di infestazione delle colonie controllo dopo il trattamento, \textit{k} il coefficiente di variazione dell'infestazione dal momento del campionamento che precede il trattamento al momento del campionamento che segue il trattamento.
 \begin{center}
 \begin{equation}
 ta = (1-eff)*k*tb
@@ -125,7 +126,77 @@ eff = 1-\frac{ta}{tb}*\frac{cb}{ca}
 \section{Risultati}
   \subsection{Distribuzione delle varroe nell'apiario e dinamica estiva}
 
+  \begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+boxplot(fbox$t0_ss900[gr1]/9,fbox$t1_ss900[gr1]/9,fbox$t2_ss900[gr1]/9,fbox$t3_ss900[gr1]/9,names=c("9 giu","12 lug","8 ago","18 set"),ylim=c(1,ylimdef))
+abline(h=5,col="red",lty=2)
+@
+\caption{Gruppo 1: andamento stagionale dell'infestazione }
+\label{figure:gr1_stagionale}
+\end{center}
+\end{figure}
 
+  \begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+boxplot(fbox$t0_ss900[gr2]/9,fbox$t1_ss900[gr2]/9,fbox$t2_ss900[gr2]/9,fbox$t3_ss900[gr2]/9,names=c("9 giu","12 lug","8 ago","18 set"),ylim=c(1,ylimdef))
+abline(h=5,col="red",lty=2)
+@
+\caption{Gruppo 2: andamento stagionale dell'infestazione }
+\label{figure:gr2_stagionale}
+\end{center}
+\end{figure}
+
+  \begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+boxplot(fbox$t0_ss900[gr3]/9,fbox$t1_ss900[gr3]/9,fbox$t2_ss900[gr3]/9,fbox$t3_ss900[gr3]/9,names=c("9 giu","12 lug","8 ago","18 set"),ylim=c(1,ylimdef))
+abline(h=5,col="red",lty=2)
+@
+\caption{Gruppo 3: andamento stagionale dell'infestazione }
+\label{figure:gr3_stagionale}
+\end{center}
+\end{figure}
+
+  \begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+boxplot(fbox$t0_ss900[gr4]/9,fbox$t1_ss900[gr4]/9,fbox$t2_ss900[gr4]/9,fbox$t3_ss900[gr4]/9,names=c("9 giu","12 lug","8 ago","18 set"),ylim=c(1,ylimdef))
+abline(h=5,col="red",lty=2)
+@
+\caption{Gruppo 4: andamento stagionale dell'infestazione }
+\label{figure:gr4_stagionale}
+\end{center}
+\end{figure}
+
+
+
+  Figura \ref{figure:gr1_stagionale}
+    Figura \ref{figure:gr2_stagionale}
+  Figura \ref{figure:gr3_stagionale}
+  Figura \ref{figure:gr4_stagionale}
+
+% R code chunk that generates LaTeX code to create table
+<<echo = false, results = tex>>=
+tempi<-read.csv2("../data/date.csv")
+names(tempi)<-c("Data","Codice","Operazioni")
+tempi<-tempi[,c(2,1,3)]
+library(xtable)
+print(xtable(meana/9,caption = "infestazioni: medie stagionali", label = "table:medie_stagionali", align="ccccc"), caption.placement = "bottom", include.rownames = F)
+@
+
+% R code chunk that generates LaTeX code to create table
+<<echo = false, results = tex>>=
+tempi<-read.csv2("../data/date.csv")
+names(tempi)<-c("Data","Codice","Operazioni")
+tempi<-tempi[,c(2,1,3)]
+library(xtable)
+print(xtable(mediana/9,caption = "infestazioni: mediane stagionali", label = "table:mediane_stagionali", align="ccccc"), caption.placement = "bottom", include.rownames = F)
+@
+  
+tabella \ref{table:medie_stagionali} e  tabella \ref{table:mediane_stagionali}  
+ 
   \subsection{Il metodo dello zucchero a velo per la stima dell'efficacia di un trattamento acaricida}
     \subsubsection{Confronto con il gruppo di controllo}
     Le casse con i requisiti per essere incluse nella prova sono risultate \Sexpr{n_fb} per il trattamento e \Sexpr{n_nt} per il controllo.\\
@@ -150,7 +221,7 @@ abline(h=5,col="red",lty=2)
 \label{figure:inf_t1_fbox}
 \end{center}
 \end{figure}
-La variazione media dell'infestazione è risultata di \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="fb"]),digits=2,nsmall=1)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="nt"]),digits=2,nsmall=1)}\% per i non trattati (fig. \ref{figure:grow_t1_fbox}).\\
+La variazione media dell'infestazione è risultata quindi di \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="fb"]),digits=2,nsmall=1)}\% per gli alveari trattati e \Sexpr{format(mean(fboxi$t1_growth[fboxi$t0_treat=="nt"]),digits=2,nsmall=1)}\% per i non trattati (fig. \ref{figure:grow_t1_fbox}).\\
 \begin{figure}[p]
 \begin{center}
 <<echo = FALSE, fig=TRUE>>=
@@ -160,33 +231,112 @@ boxplot(fboxi$t1_growth~fboxi$t0_treat,names=c("trattati","non trattati"),ylab="
 \label{figure:grow_t1_fbox}
 \end{center}
 \end{figure}
-L'efficacia media del trattamento, calcolata con la formula di \citet{henderson_tests_1955} è risultata del \Sexpr{format(mean(fboxi_fb$t1_ht.eff),digits=2,nsmall=1)}\%, la media dei dati sottoposti a trasformazione arcoseno \citep{zar_biostatistical_2010} risulta \Sexpr{format(100*sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff/100))))^2,digits=2,nsmall=1)}\% (i.c. 95\%: \Sexpr{format((sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2)[1]*100,digits=2,nsmall=1)}-\Sexpr{format((sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff/100))[-7])$conf.int)^2)[2]*100,digits=2,nsmall=1)}\%). La distribuzione è rappresentata in figura \ref{figure:hteff_t1_fbox}, é da notare che l'efficacia minima è risultata del \Sexpr{format(min(fboxi_fb$t1_ht.eff),digits=2,nsmall=1)}\% ed il primo quartile \Sexpr{format(quantile(fboxi_fb$t1_ht.eff,probs=.25),digits=2,nsmall=1)}\%.
+L'efficacia media del trattamento, calcolata con la formula di \citet{henderson_tests_1955} è risultata del \Sexpr{format(100*mean(fboxi_fb$t1_ht.eff),digits=2,nsmall=1)}\%, la media dei dati sottoposti a trasformazione arcoseno \citep{zar_biostatistical_2010} risulta \Sexpr{format(100*sin(mean(asin(sqrt(fboxi_fb$t1_ht.eff))))^2,digits=2,nsmall=1)}\% (i.c. 95\%: \Sexpr{format((sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff))[-7])$conf.int)^2)[1]*100,digits=2,nsmall=1)}-\Sexpr{format((sin(t.test(asin(sqrt(fboxi_fb$t1_ht.eff))[-7])$conf.int)^2)[2]*100,digits=2,nsmall=1)}\%). La distribuzione è rappresentata in figura \ref{figure:hteff_t1_fbox}, l'efficacia minima è risultata del \Sexpr{format(min(fboxi_fb$t1_ht.eff)*100,digits=2,nsmall=1)}\% ed il primo quartile \Sexpr{format(quantile(fboxi_fb$t1_ht.eff,probs=.25)*100,digits=2,nsmall=1)}\%.
 
 \begin{figure}[p]
 \begin{center}
 <<echo = FALSE, fig=TRUE>>=
-boxplot(fboxi_fb$t1_ht.eff,ylab="efficacia (%)")
+boxplot(fboxi_fb$t1_ht.eff,ylab="efficacia (%)",ylim=c(0,1))
 @
-\caption{Boxplot della variazione dell'infestazione nei gruppi trattati e non trattati tra t0 e t1.}
+\caption{Boxplot dell'efficacia del trattamento nel gruppo 1 calcolata con la formula di Henderson e Tilton.}
 \label{figure:hteff_t1_fbox}
 \end{center}
 \end{figure}
      
-     \subsubsection{Zucchero a velo e conteggio dei fondi}
+     \subsubsection{Zucchero a velo e conteggio dei fondi in blocco di covata}
 Al netto delle casse con problemi di regina sono rimasti nella prova \Sexpr{num_fbox} alveari trattati e \Sexpr{num_ctr} non trattati che fungevano da controllo.\\
 
 
-     
+\begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+boxplot(cadute_fbox,names=(Dates.cad-as.Date("2012/07/12")))
+lines(x=c(7.5,7.5),y=c(0,max(cadute_fbox)),lwd=3,col="red")
+text(7.5,max(cadute_fbox),"trattamento di controllo",adj=1,col="red")
+@
+\caption{Andamento delle cadute nelle casse bloccate e trattate con formicobox}
+\label{figure:cad_bl_fbox}
+\end{center}
+\end{figure}  
+
+\begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+boxplot(cadute_ctr,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti")
+lines(x=c(7.5,7.5),y=c(0,max(cadute_ctr)),lwd=3,col="red")
+text(7.5,max(cadute_ctr),"trattamento di controllo",adj=1,col="red")
+@
+\caption{Andamento delle cadute nelle casse bloccate di controllo}
+\label{figure:cad_bl_ctr}
+\end{center}
+\end{figure}     
+
+  Figura \ref{figure:cad_bl_fbox}   Figura \ref{figure:cad_bl_ctr}\\
+
+L'efficacia media del trattamento calcolata secondo la formula di Henderson Tilton applicata ai rilevamenti con lo zucchero è risultata \Sexpr{format(100*mean(ht.sug), digits=2,nsmall=1)}\% (fig. \ref{figure:ht.sug}).
+\begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+boxplot(ht.sug)
+@
+\caption{Andamento delle cadute nelle casse bloccate di controllo}
+\label{figure:ht.sug}
+\end{center}
+\end{figure}     
+
+Risulta significativamente inferiore all'efficacia rilevata nel trattamento di giugno con lo stesso metodo (dati trasformati con trasformazione arcoseno (cit), Welch T test T = \Sexpr{format(t.test(asin(sqrt(ht.sug)),asin(sqrt(fboxi_fb$t1_ht.eff)))$statistic, digits=2,nsmall=1)}, DF=\Sexpr{format(t.test(asin(sqrt(ht.sug)),asin(sqrt(fboxi_fb$t1_ht.eff)))$parameter, digits=2,nsmall=1)}, p=\Sexpr{format(t.test(asin(sqrt(ht.sug)),asin(sqrt(fboxi_fb$t1_ht.eff)))$p.value, digits=2,nsmall=1)}).\\
+\\
+Calcolata invece con il metodo dei fondi l'efficacia media del trattamento risulta \Sexpr{format(mean(class), digits=2,nsmall=1)}, con la correzione di Henderson-Tilton \Sexpr{format(100*mean(ht.sug), digits=2,nsmall=1)}\% La correlazione con l'efficacia calcolata con Henderson - Tilton è buona.\\
+
+La correlazione tra le cadute in blocco e lo zucchero in blocco è ottima r=\Sexpr{format(cor(fbox_blocco_m$t2_ss900/9, apply(fbox_blocco_m[,10:12],1,sum)), digits=2,nsmall=1)} cfr fig. \ref{figure:cor.zt2_cad}.\\
+Sulla base del modello di regressione cadute/zucchero si stima che le casse avessero in media al momento dello sgabbio \Sexpr{100/linear_model$coefficients} api.
+\begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+plot(apply(fbox_blocco_m[,10:12],1,sum),fbox_blocco_m$t2_ss900/9,ylab="zucchero %",xlab="cadute")
+abline(lm(fbox_blocco_m$t2_ss900/9~0+apply(fbox_blocco_m[,10:12],1,sum)))
+@
+\caption{correlatione tra rilevamento con metodo dello zucchero e caduta in assenza di covata con il trattamento di controllo}
+\label{figure:cor.zt2_cad}
+\end{center}
+\end{figure}   
+
+Figura \ref{figure:cfr_abb_ht}
+
+\begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+rb<-boxplot(abb,ht.sug,names=c("cadute corr. Abbott","zucchero"),ylim=c(0,1)) 
+c(mean(abb),mean(ht.sug))->mean.values
+points(seq(rb$n), mean.values, pch = 17) #aggiunte medie a boxplot
+@
+\caption{confronto tra l'efficacia secondo le cadute corrette con Abbott ed il metodo dello zucchero corretto con Henderson-Tilton}
+\label{figure:cfr_abb_ht}
+\end{center}
+\end{figure} 
+
      
 \subsection{Efficacia e fattibilità del trattamento Fbox}
 
 %% referenza per alcoohl wash: De Jong, D., D. De Andrea Roma, and L. S. Gonalves.1982b. A comparative analysis of shaking solutions forthe detection of Varroa jacobsoni on adult honeybees.Apidologie 13: 297Ð306.
 % ma noi abbiamo usato la versione consigliata da arsa cercare sito internet.
+Precisione: figura \ref{figure:precisione}
+
+\begin{figure}[p]
+\begin{center}
+<<echo = FALSE, fig=TRUE>>=
+curve(sqrt(x)/x,0,10)
+@
+\caption{Precisione della misurazione (dev standard/media) in rapporto alla media}
+\label{figure:precisione}
+\end{center}
+\end{figure} 
 
 
 \section {Discussione}
 La variabilità dell'efficacia del trattamento in presenza di covata potenzialmente influenzato dalla reinfestazione, oltre che dall'errore sistematico che deriva dal campionamento e dalla possibile variazione del rapporto tra varroe foretiche e varroe in riproduzione. %commenti su drifting (cercare reinfestation in biblio zotero).
-Anche la variazione della popolazione di api adulte, che non è uguale nelle casse, è una causa di variabilità importante e dovrebbe essere valutata nel disegno sperimentale.
+Anche la variazione della popolazione di api adulte, che non è uguale nelle casse, è una causa di variabilità importante e dovrebbe essere valutata nel disegno sperimentale.\\
+In Luglio si è già in periodo di calo della popolazione di api adulte (influenzando i valori rilevati con lo zucchero): stimare le api adulte?
 
 %henderson: per tener conto dei casi che comunque sarebbero schizzati al massimo, ma magari meno, bisognerebbe applicare henderson con medie differenziate sui 4 quartili (di crescita). Per tenere in qualche modo conto della diversa potenzialità di aumento della varroa nelle diverse casse.
 %\backmatter
