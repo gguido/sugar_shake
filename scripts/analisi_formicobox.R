@@ -42,7 +42,7 @@ fbox$groups[gr4]="gr4"
 
 # hives selection -------------------------------------------------------
 minvar=2.5  #varroe minime per inclusione
-maxvar=5*9 #varroe massime per inclusione
+maxvar=90 #varroe massime per inclusione
 !is.na(fbox$t0_ss900-fbox$t1_ss900)->include # NAs removed (only time 0 and 1)
 fbox$t0_ss900<maxvar & fbox$t0_ss900>minvar & include ->include #excluded most infested hives and hives with infestation under 1/900
 
@@ -60,6 +60,10 @@ n_fb<-dim(fboxi[fboxi$t0_treat=="fb",])[1]    # num fbox hives
 boxplot(t0_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
 kruskal.test(t0_ss900/9~t0_treat,data=fboxi)
 #t.test(log(t0_ss900)~t0_treat,data=fboxi) non abbiamo certezze sulla distribuzione, specie dopo la selezione: meglio K-W
+
+# t1 infestation
+boxplot(t1_ss900/9~t0_treat,data=fboxi,names=c("trattati","non trattati"),ylab="infestazione (%)")
+kruskal.test(t1_ss900/9~t0_treat,data=fboxi)
 
 
 #fboxi$eff_log<-log(ss9_at+0.5)-log(ss9_bt+0.5)
@@ -93,7 +97,8 @@ ht.coeff(coef(model_lm)[1],coef(model_lm)[2])
   
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 mean(fboxi_fb$t1_ht.eff)
-boxplot(fboxi_fb$t1_ht.eff)
+boxplot(fboxi_fb$t1_ht.eff,ylim=c(0,1))
+median(fboxi_fb$t1_ht.eff)
 length(fboxi_fb$t1_ht.eff)
 
 #prova con i quantili
@@ -318,7 +323,7 @@ ht.efficacy(tb,ta,cb,ca)
 ht.efficacy(tb,ta,cb,ca)->ht.sug2
 mean(ht.efficacy(tb,ta,cb,ca))
 median(ht.efficacy(tb,ta,cb,ca))
-boxplot(ht.sug2)
+boxplot(ht.sug2,ylim=c(0,1))
 boxplot(ht.efficacy.quantiles(tb,ta,cb,ca,c(0.25,0.5,0.75)))
 
 sin(mean(asin(sqrt(ht.sug2/100))))^2#media trasformati
@@ -329,7 +334,7 @@ boxplot(ht.efficacy(tb,ta,cb,ca))
 
 ## Andamento gruppi -----------------------------------------------------
 
-boxplot(fbox$t0_ss900/9,fbox$t1_ss900/9,fbox$t2_ss900/9,fbox$t3_ss900/9)
+boxplot(fbox$t0_ss900/9,fbox$t1_ss900/9,fbox$t2_ss900/9,fbox$t3_ss900/9,names=c("giu","lug","ago","set"))
 abline(h=5,col="red",lty=2)
 
 round(max(fbox$t1_ss900/9,na.rm=T)+1)->ylimdef
