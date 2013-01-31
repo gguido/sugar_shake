@@ -50,8 +50,8 @@ fboxi<-fbox[include,] #dataset delle casse in analisi
 rm(include)
 #fboxi<-fboxi[order(fboxi$ss9_bt),] ????? inutile ?????
 
-n_nt<-dim(fboxi[fboxi$t0_treat=="nt",])[1] # num ctr hives
-n_fb<-dim(fboxi[fboxi$t0_treat=="fb",])[1]    # num fbox hives
+print(n_nt<-dim(fboxi[fboxi$t0_treat=="nt",])[1]) # num ctr hives
+print(n_fb<-dim(fboxi[fboxi$t0_treat=="fb",])[1])    # num fbox hives
 
 
 # t1-t0 growth analysis ---------------------------------------------------
@@ -64,8 +64,10 @@ kruskal.test(t0_ss900/9~t0_treat,data=fboxi)
 
 #fboxi$eff_log<-log(ss9_at+0.5)-log(ss9_bt+0.5)
 fboxi$t1_growth<-(fboxi$t1_ss900-fboxi$t0_ss900)/fboxi$t0_ss900*100
-
+### (dopo-prima)/prima*100
 #boxplot(t1_growth~tratt)
+
+#boxplot variazione percentuale in un mese
 boxplot(fboxi$t1_growth~fboxi$t0_treat,names=c("trattati","non trattati"))
 
 fboxi_nt<-fboxi[fboxi$t0_treat=="nt",]
@@ -93,7 +95,7 @@ ht.coeff(coef(model_lm)[1],coef(model_lm)[2])
   
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 mean(fboxi_fb$t1_ht.eff)
-boxplot(fboxi_fb$t1_ht.eff)
+boxplot(fboxi_fb$t1_ht.eff,ylim=c(0,1))
 length(fboxi_fb$t1_ht.eff)
 
 #prova con i quantili
@@ -123,20 +125,22 @@ cbind(fboxi_fb$t1_ht.eff,apc) #risultato: gli stessi valori con henderson-tilton
 # #capire come gestire gli zeri iniziali
 # detach(dataplac)
 # 
-# attach(fboxi)
-# order(cassa)->ordine
-# rbind(ss9_bt[ordine],ss9_at[ordine])->counts
-# row.names(counts)<-c("prima","dopo")
-# names(counts)<-cassa[ordine]
-# barplot(counts, main="Infestazione delle api adulte",
+attach(fbox)
+order(id_hive)->ordine
+rbind(t0_ss900[ordine],t1_ss900[ordine])->counts
+colori<-t0_treat[ordine]
+names(colori)<-c("red","black")
+row.names(counts)<-c("prima","dopo")
+names(counts)<-id_hive[ordine]
+#barplot(counts, main="Infestazione delle api adulte",
 #         xlab="Famiglie", col=c("white","yellow"),ylab="Varroe/900 api",
 #         legend = rownames(counts), beside=TRUE)
-# barplot(counts[1,], main="Infestazione delle api adulte prima del trattamento",
-#         xlab="Famiglie", col=c(rep("black",dim(datafb)[1]),rep("red",dim(dataplac)[1])),ylab="Varroe/900 api",ylim=c(0,35))
-# barplot(counts[2,], main="Infestazione delle api adulte un mese dopo il trattamento",
-#         xlab="Famiglie", col=c(rep("black",dim(datafb)[1]),rep("red",dim(dataplac)[1])),ylab="Varroe/900 api")
-# 
-# 
+barplot(counts[1,]/9, main="Infestazione delle api adulte prima del trattamento",
+        xlab="Famiglie", col=colori,ylab="Varroe/100 api",ylim=c(0,25)); abline(h=5,lty=2,col="red")
+barplot(counts[2,]/9, main="Infestazione delle api adulte un mese dopo il trattamento",
+        xlab="Famiglie", col=colori,ylab="Varroe/100 api",ylim=c(0,25)); abline(h=5,lty=2,col="red")
+detach(fbox)
+
 # 
 # rbind(-(ss9_bt[ordine]-ss9_at[ordine]))->counts
 # barplot(counts, main="Car Distribution",
@@ -172,12 +176,17 @@ plot(Dates.cad,apply(cadute_ctr,2,mean),type="l")
 #plot(apply(fbox_blocco_m[,c(3:12)],1,sum),fbox_blocco_m$)
 
 #boxplot cadute, usare caduta giornaliera e non dati assoluti (3 e 4 giorni)
-boxplot(cadute_ctr,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti")
-lines(x=c(7.5,7.5),y=c(0,max(cadute_ctr)),lwd=3,col="red")
-text(7.5,max(cadute_ctr),"trattamento di controllo",adj=1,col="red")
+boxplot(cadute_ctr,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti",ylim=c(0,1000))
+lines(x=c(7.5,7.5),y=c(0,1000),lwd=3,col="red")
+text(7.4,1000,"trattamento di controllo",adj=1,col="red")
+
+boxplot(cadute_fbox,names=(Dates.cad-as.Date("2012/07/12")),xlab="giorni dal trattamento",ylab="acari caduti",ylim=c(0,1000))
+lines(x=c(7.5,7.5),y=c(0,1000),lwd=3,col="red")
+text(7.4,1000,"trattamento di controllo",adj=1,col="red")
+
 boxplot(cadute_fbox,names=(Dates.cad-as.Date("2012/07/12")))
 lines(x=c(7.5,7.5),y=c(0,max(cadute_fbox)),lwd=3,col="red")
-text(7.5,max(cadute_fbox),"trattamento di controllo",adj=1,col="red")
+text(7.4,max(cadute_fbox),"trattamento di controllo",adj=1,col="red")
 boxplot(cadute_fbox[1:7],add=F,col="red",names=(Dates.cad-as.Date("2012/07/12"))[1:7]) #confronto efficacia sotto opercolo
 
 ##selezione 2
@@ -211,6 +220,9 @@ mean(ht.efficacy(tb,ta,cb,ca))
 rb<-boxplot(abb,ht.sug,names=c("cadute corr. Abbott","zucchero"),ylim=c(0,1)) 
 c(mean(abb),mean(ht.sug))->mean.values
 points(seq(rb$n), mean.values, pch = 17) #aggiunte medie a boxplot
+
+plot(abb, ht.sug)
+barplot(as.matrix(rbind(abb, ht.sug)), xlab="Famiglie", col=c("red","dark green"),ylab="efficacia", beside=TRUE)
 
 
 t.test(asin(sqrt(ht.sug)),asin(sqrt(fboxi_fb$t1_ht.eff)))$p.value
