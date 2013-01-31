@@ -100,10 +100,9 @@ ht.coeff(coef(model_lm)[1],coef(model_lm)[2])
 fboxi_fb$t1_ht.eff<-ht.efficacy(fboxi_fb$t0_ss900,fboxi_fb$t1_ss900,fboxi_nt$t0_ss900,fboxi_nt$t1_ss900)
 mean(fboxi_fb$t1_ht.eff)
 boxplot(fboxi_fb$t1_ht.eff,ylim=c(0,1))
-<<<<<<< HEAD
-=======
+
 median(fboxi_fb$t1_ht.eff)
->>>>>>> d1697dca9a03390e0a79b50aac22b5147b94f6a5
+
 length(fboxi_fb$t1_ht.eff)
 
 #prova con i quantili
